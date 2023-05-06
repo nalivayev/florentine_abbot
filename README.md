@@ -24,7 +24,7 @@ p - placeholder character
 
 Template format example:
 
-`{year:8:>:0}`
+`{digitization_year:8:>:0}`
 
 List of templates that can be used in main section run_vuescan_workflow.ini:
 
