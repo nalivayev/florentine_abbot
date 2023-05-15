@@ -1,8 +1,8 @@
 from configparser import ConfigParser, ExtendedInterpolation
+from argparse import ArgumentParser, Action
 from solidol.log.log import log, Logger
 from shutil import SameFileError, move
 from solidol.image.exif import EXIF
-from argparse import ArgumentParser
 from getpass import getuser
 from subprocess import run
 from pathlib import Path
@@ -13,15 +13,38 @@ from typing import Any
 
 class WorkflowParser(ArgumentParser):
 
+    class KeyValueAction(Action):
+
+        def __call__(self, p_parser, p_namespace, p_value, p_option=None):
+            v_dictionary = {}
+            if p_value:
+                for v_pair in p_value:
+                    v_key, v_value = v_pair.split("=")
+                    v_dictionary[v_key] = v_value
+            setattr(p_namespace, self.dest, v_dictionary)
+
     _required_group: Any
 
     def __init__(self):
         ArgumentParser.__init__(self)
         self._required_group = self.add_argument_group("required arguments")
-        self._required_group.add_argument("-w", "--workflow", type=str, help="name of the workflow path")
+        self._required_group.add_argument(
+            "-w",
+            "--workflow",
+            type=str,
+            help="name of the workflow path"
+        )
+        self.add_argument(
+            "-tl",
+            "--template_list",
+            type=str,
+            nargs="+",
+            action=WorkflowParser.KeyValueAction,
+            help="list of templates"
+        )
 
-    def parse_args(self, args=None, namespace=None):
-        v_result = ArgumentParser.parse_args(self, args, namespace)
+    def parse_args(self, p_args=None, p_namespace=None):
+        v_result = ArgumentParser.parse_args(self, p_args, p_namespace)
         if not v_result.workflow:
             self.error("Incorrect name of the workflow path")
         return v_result
@@ -41,6 +64,7 @@ class VueScanWorkflow:
     _script_parser: ConfigParser
     _vuescan_parser: ConfigParser
     _workflow_path: Path
+    _template_list: {}
 
     def _read_settings_file(self, p_path: Path) -> ConfigParser:
         if Path(p_path).exists():
@@ -52,9 +76,13 @@ class VueScanWorkflow:
         else:
             raise VueScanWorkflow.Exception(f"Error loading settings from file '{p_path}'")
 
+    # noinspection PyMethodMayBeStatic
+    def _add_system_templates(self):
+        self._template_list["user_name"] = getuser()
+
     def _read_settings(self):
         self._script_parser = self._read_settings_file(Path(__file__).with_suffix(".ini"))
-        self._convert_templates_to_values(self._script_parser, self._create_script_dictionary())
+        self._convert_templates_to_values(self._script_parser)
         v_workflow_settings_path_name = Path(self._workflow_path, self._WORKFLOW_SETTINGS_NAME)
         self._workflow_parser = self._read_settings_file(v_workflow_settings_path_name)
         log(self._logger, [f"Workflow description: {self._workflow_parser['main']['description']}"])
@@ -97,12 +125,12 @@ class VueScanWorkflow:
             raise VueScanWorkflow.Exception(f"File '{v_program_path_name}' not found")
 
     # noinspection PyMethodMayBeStatic
-    def _convert_value(self, p_value: str, p_dictionary: {}) -> str:
+    def _convert_value(self, p_value: str) -> str:
         v_fields = p_value.split(":")
         if len(v_fields) > 0:
             v_key = v_fields[0]
             try:
-                v_value = p_dictionary[v_key]
+                v_value = self._template_list[v_key]
             except KeyError:
                 raise VueScanWorkflow.Exception(f"Key {v_key} not found")
             try:
@@ -117,43 +145,35 @@ class VueScanWorkflow:
         else:
             raise VueScanWorkflow.Exception("An empty template was found")
 
-    def _convert_template_to_value(self, p_template: str, p_dictionary: {}) -> str:
+    def _convert_template_to_value(self, p_template: str) -> str:
         v_result = p_template
         for v_match in finditer("{(.+?)}", p_template):
             v_template = p_template[v_match.start():v_match.end()]
             try:
-                v_value = self._convert_value(v_template[1:-1], p_dictionary)
+                v_value = self._convert_value(v_template[1:-1])
             except VueScanWorkflow.Exception as v_exception:
                 log(self._logger, [str(v_exception)])
                 continue
             v_result = v_result.replace(v_template, v_value)
         return v_result
 
-    def _convert_templates_to_values(self, p_parser: ConfigParser, p_dictionary: {}):
+    def _convert_templates_to_values(self, p_parser: ConfigParser):
         if p_parser:
-            for v_item in p_parser.items("main"):
-                p_parser["main"][v_item[0]] = self._convert_template_to_value(v_item[1], p_dictionary)
+            for v_section in p_parser.sections():
+                for v_key, v_value in p_parser.items(v_section):
+                    p_parser[v_section][v_key] = self._convert_template_to_value(v_value)
 
-    # noinspection PyMethodMayBeStatic
-    def _create_workflow_dictionary(self, p_tags: {}) -> {}:
-        v_dictionary = dict.fromkeys(
-            [
-                "digitization_year", "digitization_month", "digitization_day", "digitization_hour",
-                "digitization_minute", "digitization_second"
-            ],
-            ""
-        )
+    def _add_output_file_templates(self, p_tags: {}) -> {}:
+        v_keys = [
+            "digitization_year", "digitization_month", "digitization_day", "digitization_hour", "digitization_minute",
+            "digitization_second"
+        ]
         try:
             v_datetime = EXIF.convert_value_to_datetime(p_tags.get(EXIF.EXIFIFD, {}).get("DateTimeDigitized", " ").decode())
         except EXIF.Exception:
-            return v_dictionary
-        for v_key in v_dictionary:
-            v_dictionary[v_key] = getattr(v_datetime, v_key.replace("digitization_", ""), "")
-        return v_dictionary
-
-    # noinspection PyMethodMayBeStatic
-    def _create_script_dictionary(self) -> {}:
-        return {"user_name": getuser()}
+            return
+        for v_key in v_keys:
+            self._template_list[v_key] = getattr(v_datetime, v_key.replace("digitization_", ""), "")
 
     def _extract_exif_tags(self, p_path: Path) -> {}:
         try:
@@ -169,10 +189,8 @@ class VueScanWorkflow:
             f"{self._workflow_parser['vuescan']['output_file_name']}.{self._workflow_parser['vuescan']['output_extension_name']}"
         )
         if v_input_path.exists():
-            self._convert_templates_to_values(
-                self._workflow_parser,
-                self._create_workflow_dictionary(self._extract_exif_tags(v_input_path))
-            )
+            self._add_output_file_templates(self._extract_exif_tags(v_input_path))
+            self._convert_templates_to_values(self._workflow_parser)
             if not Path(self._workflow_parser["main"]["output_path"]).exists():
                 makedirs(self._workflow_parser["main"]["output_path"], True)
             v_output_path = Path(
@@ -214,10 +232,12 @@ class VueScanWorkflow:
         else:
             log(self._logger, ["VueScan logging file not found"])
 
-    def run(self, p_logger: Logger, p_workflow_path: str):
+    def run(self, p_logger: Logger, p_workflow_path: str, p_template_list: {}):
+        self._template_list = p_template_list
         self._logger = p_logger
         self._workflow_path = Path(p_workflow_path).resolve()
         log(self._logger, ["Starting the workflow"])
+        self._add_system_templates()
         self._read_settings()
         self._merge_settings()
         self._overwrite_vuescan_settings_file()
@@ -233,7 +253,11 @@ def main():
     v_workflow = VueScanWorkflow()
     v_logger = Logger(str(Path(__file__).with_suffix(".log")), "workflow")
     try:
-        v_workflow.run(v_logger, v_args.workflow)
+        v_workflow.run(
+            v_logger,
+            getattr(v_args, "workflow", ""),
+            getattr(v_args, "template_list", {})
+        )
     except VueScanWorkflow.Exception as v_exception:
         log(v_logger, [str(v_exception)])
 

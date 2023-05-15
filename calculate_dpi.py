@@ -11,44 +11,45 @@ class CalculatorParser(ArgumentParser):
         self._required_group = self.add_argument_group("required arguments")
         self._required_group.add_argument(
             "-pl",
-            "--photolength",
+            "--photo_length",
             type=float,
             help="the length of the larger side of the photo in centimeters"
         )
         self._required_group.add_argument(
             "-il",
-            "--imagelength",
+            "--image_length",
             type=int,
             help="the desired length of the larger side of the digitized image in pixels"
         )
         self.add_argument(
             "-minr",
-            "--minimalresolution",
+            "--minimal_resolution",
             type=int,
-            help="minimum resolution when scanning in dpi"
+            help="minimum resolution when scanning in DPI"
         )
         self.add_argument(
             "-maxr",
-            "--maximalresolution",
+            "--maximal_resolution",
             type=int,
-            help="maximal resolution when scanning in dpi"
+            help="maximal resolution when scanning in DPI"
         )
         self.add_argument(
             "-rl",
-            "--resolutionlist",
+            "--resolution_list",
             type=int,
-            nargs="+"
+            nargs="+",
+            help="a list of DPI resolutions supported by the scanner, separated by a space, e.g., '100, 300, 1200'"
         )
 
-    def parse_args(self, args=None, namespace=None):
-        v_result = ArgumentParser.parse_args(self, args, namespace)
-        if v_result.photolength:
-            if v_result.photolength <= 0:
+    def parse_args(self, p_args=None, p_namespace=None):
+        v_result = ArgumentParser.parse_args(self, p_args, p_namespace)
+        if v_result.photo_length:
+            if v_result.photo_length <= 0:
                 self.error("Incorrect length of the larger side of the photo")
         else:
             self.error("Incorrect length of the larger side of the photo")
-        if v_result.imagelength:
-            if v_result.imagelength <= 0:
+        if v_result.image_length:
+            if v_result.image_length <= 0:
                 self.error("Incorrect desired length of the larger side of the digitized image in pixels")
         else:
             self.error("Incorrect desired length of the larger side of the digitized image in pixels")
@@ -105,11 +106,11 @@ def main():
     v_args = v_parser.parse_args()
     v_calculator = Calculator()
     v_calculator.do(
-        v_args.photolength,
-        v_args.imagelength,
-        v_args.minimalresolution,
-        v_args.maximalresolution,
-        v_args.resolutionlist
+        v_args.photo_length,
+        v_args.image_length,
+        v_args.minimal_resolution,
+        v_args.maximal_resolution,
+        v_args.resolution_list
     )
 
 
