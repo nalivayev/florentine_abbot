@@ -164,16 +164,15 @@ class VueScanWorkflow:
                     p_parser[v_section][v_key] = self._convert_template_to_value(v_value)
 
     def _add_output_file_templates(self, p_tags: {}) -> {}:
-        v_keys = [
-            "digitization_year", "digitization_month", "digitization_day", "digitization_hour", "digitization_minute",
-            "digitization_second"
-        ]
-        try:
-            v_datetime = EXIF.convert_value_to_datetime(p_tags.get(EXIF.EXIFIFD, {}).get("DateTimeDigitized", " ").decode())
-        except EXIF.Exception:
-            return
-        for v_key in v_keys:
-            self._template_list[v_key] = getattr(v_datetime, v_key.replace("digitization_", ""), "")
+        v_value = p_tags.get(EXIF.EXIFIFD, {}).get("DateTimeDigitized", "")
+        if v_value:
+            try:
+                v_datetime = EXIF.convert_value_to_datetime(v_value.decode())
+            except EXIF.Exception:
+                return
+            for v_key in ["digitization_year", "digitization_month", "digitization_day", "digitization_hour",
+                          "digitization_minute", "digitization_second"]:
+                self._template_list[v_key] = getattr(v_datetime, v_key.replace("digitization_", ""), "")
 
     def _extract_exif_tags(self, p_path: Path) -> {}:
         try:
