@@ -1,6 +1,6 @@
+from piexif import load, TAGS, InvalidImageDataError
 from datetime import datetime, timedelta
 from pathlib import Path
-from piexif import load, TAGS
 
 
 class EXIF:
@@ -92,7 +92,10 @@ class EXIF:
         }
 
         if Path(p_path).is_file():
-            v_dict = load(p_path)
+            try:
+                v_dict = load(p_path)
+            except InvalidImageDataError:
+                raise EXIF.Exception("Invalid image file format")
             v_tags = {}
             for v_ifd in ("0th", "Exif", "GPS", "1st"):
                 for v_tag in v_dict[v_ifd]:
