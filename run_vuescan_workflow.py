@@ -232,7 +232,7 @@ class VueScanWorkflow:
             log(self._logger, ["VueScan logging file not found"])
 
     def run(self, p_logger: Logger, p_workflow_path: str, p_template_list: {}):
-        self._template_list = p_template_list
+        self._template_list = p_template_list if p_template_list else {}
         self._logger = p_logger
         self._workflow_path = Path(p_workflow_path).resolve()
         log(self._logger, ["Starting the workflow"])
