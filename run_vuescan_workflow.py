@@ -9,6 +9,8 @@ from pathlib import Path
 from os import makedirs
 from re import finditer
 from typing import Any
+from os.path import getmtime
+from datetime import date
 
 
 class WorkflowParser(ArgumentParser):
@@ -163,13 +165,19 @@ class VueScanWorkflow:
                 for v_key, v_value in p_parser.items(v_section):
                     p_parser[v_section][v_key] = self._convert_template_to_value(v_value)
 
-    def _add_output_file_templates(self, p_tags: {}) -> {}:
-        v_value = p_tags.get(EXIF.EXIFIFD, {}).get("DateTimeDigitized", "")
-        if v_value:
-            try:
-                v_datetime = EXIF.convert_value_to_datetime(v_value.decode())
-            except EXIF.Exception:
-                return
+    def _add_output_file_templates(self, p_path: Path) -> {}:
+        v_datetime = None
+        if p_path.suffix.lower() in [".tiff", ".tif", ".jpeg", ".jpg"]:
+            v_tags = self._extract_exif_tags(p_path)
+            v_value = v_tags.get(EXIF.EXIFIFD, {}).get("DateTimeDigitized", "")
+            if v_value:
+                try:
+                    v_datetime = EXIF.convert_value_to_datetime(v_value.decode())
+                except EXIF.Exception:
+                    return
+        else:
+            v_datetime = date.fromtimestamp(getmtime(p_path))
+        if v_datetime:
             for v_key in ["digitization_year", "digitization_month", "digitization_day", "digitization_hour",
                           "digitization_minute", "digitization_second"]:
                 self._template_list[v_key] = getattr(v_datetime, v_key.replace("digitization_", ""), "")
@@ -188,7 +196,7 @@ class VueScanWorkflow:
             f"{self._workflow_parser['vuescan']['output_file_name']}.{self._workflow_parser['vuescan']['output_extension_name']}"
         )
         if v_input_path.exists():
-            self._add_output_file_templates(self._extract_exif_tags(v_input_path))
+            self._add_output_file_templates(v_input_path)
             self._convert_templates_to_values(self._workflow_parser)
             if not Path(self._workflow_parser["main"]["output_path"]).exists():
                 makedirs(self._workflow_parser["main"]["output_path"], True)
