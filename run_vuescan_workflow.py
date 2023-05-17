@@ -3,14 +3,14 @@ from argparse import ArgumentParser, Action
 from solidol.log.log import log, Logger
 from shutil import SameFileError, move
 from solidol.image.exif import EXIF
+from datetime import datetime
+from os.path import getmtime
 from getpass import getuser
 from subprocess import run
 from pathlib import Path
 from os import makedirs
 from re import finditer
 from typing import Any
-from os.path import getmtime
-from datetime import date
 
 
 class WorkflowParser(ArgumentParser):
@@ -176,7 +176,7 @@ class VueScanWorkflow:
                 except EXIF.Exception:
                     return
         else:
-            v_datetime = date.fromtimestamp(getmtime(p_path))
+            v_datetime = datetime.fromtimestamp(getmtime(p_path))
         if v_datetime:
             for v_key in ["digitization_year", "digitization_month", "digitization_day", "digitization_hour",
                           "digitization_minute", "digitization_second"]:
