@@ -1,5 +1,4 @@
 from configparser import ConfigParser, ExtendedInterpolation
-from argparse import ArgumentParser, Action
 from solidol.log.log import log, Logger
 from shutil import SameFileError, move
 from solidol.image.exif import EXIF
@@ -10,46 +9,6 @@ from subprocess import run
 from pathlib import Path
 from os import makedirs
 from re import finditer
-from typing import Any
-
-
-class WorkflowParser(ArgumentParser):
-
-    class KeyValueAction(Action):
-
-        def __call__(self, p_parser, p_namespace, p_value, p_option=None):
-            v_dictionary = {}
-            if p_value:
-                for v_pair in p_value:
-                    v_key, v_value = v_pair.split("=")
-                    v_dictionary[v_key] = v_value
-            setattr(p_namespace, self.dest, v_dictionary)
-
-    _required_group: Any
-
-    def __init__(self):
-        ArgumentParser.__init__(self)
-        self._required_group = self.add_argument_group("required arguments")
-        self._required_group.add_argument(
-            "-w",
-            "--workflow",
-            type=str,
-            help="name of the workflow path"
-        )
-        self.add_argument(
-            "-tl",
-            "--template_list",
-            type=str,
-            nargs="+",
-            action=WorkflowParser.KeyValueAction,
-            help="list of templates"
-        )
-
-    def parse_args(self, p_args=None, p_namespace=None):
-        v_result = ArgumentParser.parse_args(self, p_args, p_namespace)
-        if not v_result.workflow:
-            self.error("Incorrect name of the workflow path")
-        return v_result
 
 
 class VueScanWorkflow:
@@ -78,7 +37,6 @@ class VueScanWorkflow:
         else:
             raise VueScanWorkflow.Exception(f"Error loading settings from file '{p_path}'")
 
-    # noinspection PyMethodMayBeStatic
     def _add_system_templates(self):
         self._template_list["user_name"] = getuser()
 
@@ -126,7 +84,6 @@ class VueScanWorkflow:
         else:
             raise VueScanWorkflow.Exception(f"File '{v_program_path_name}' not found")
 
-    # noinspection PyMethodMayBeStatic
     def _convert_value(self, p_value: str) -> str:
         v_fields = p_value.split(":")
         if len(v_fields) > 0:
@@ -252,22 +209,3 @@ class VueScanWorkflow:
         self._move_output_file()
         self._move_logging_file()
         log(self._logger, ["Workflow completed successfully"])
-
-
-def main():
-    v_parser = WorkflowParser()
-    v_args = v_parser.parse_args()
-    v_workflow = VueScanWorkflow()
-    v_logger = Logger(str(Path(__file__).with_suffix(".log")), "workflow")
-    try:
-        v_workflow.run(
-            v_logger,
-            getattr(v_args, "workflow", ""),
-            getattr(v_args, "template_list", {})
-        )
-    except VueScanWorkflow.Exception as v_exception:
-        log(v_logger, [str(v_exception)])
-
-
-if __name__ == "__main__":
-    main()

@@ -7,7 +7,7 @@ Includes:
 
 calculate_dpi.py - a utility to calculate the optimal scanning mode based on raw photo data
 
-run_vuescan_workflow.py - a utility that runs a simulated workflow for VueScan based on previously saved program settings
+run_workflow.py - a utility that runs a simulated workflow for VueScan based on previously saved program settings
 
 The settings use templates
 
