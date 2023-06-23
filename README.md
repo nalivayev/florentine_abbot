@@ -26,13 +26,9 @@ Template format example:
 
 `{digitization_year:8:>:0}`
 
-List of templates that can be used in main section run_vuescan_workflow.ini:
+List of templates that can be used in *.ini files:
 
 user_name - operating system user name
-
-
-List of templates that can be used in main section workflow.ini:
-
 digitization_year - year of digitization extracted from EXIF  
 digitization_month - month of digitization extracted from EXIF  
 digitization_day - day of digitization extracted from EXIF  
