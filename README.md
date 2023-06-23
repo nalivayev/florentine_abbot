@@ -28,7 +28,7 @@ Template format example:
 
 List of templates that can be used in *.ini files:
 
-user_name - operating system user name
+user_name - operating system user name  
 digitization_year - year of digitization extracted from EXIF  
 digitization_month - month of digitization extracted from EXIF  
 digitization_day - day of digitization extracted from EXIF  
