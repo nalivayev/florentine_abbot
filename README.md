@@ -7,7 +7,7 @@ Includes:
 
 calculate_dpi.py - a utility to calculate the optimal scanning mode based on raw photo data
 
-run_vuescan_workflow.py - a utility that runs a simulated workflow for VueScan based on previously saved program settings
+run_workflow.py - a utility that runs a simulated workflow for VueScan based on previously saved program settings
 
 The settings use templates
 
@@ -26,13 +26,9 @@ Template format example:
 
 `{digitization_year:8:>:0}`
 
-List of templates that can be used in main section run_vuescan_workflow.ini:
+List of templates that can be used in *.ini files:
 
-user_name - operating system user name
-
-
-List of templates that can be used in main section workflow.ini:
-
+user_name - operating system user name  
 digitization_year - year of digitization extracted from EXIF  
 digitization_month - month of digitization extracted from EXIF  
 digitization_day - day of digitization extracted from EXIF  
