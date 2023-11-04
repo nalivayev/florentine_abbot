@@ -38,7 +38,7 @@ class CalculatorParser(ArgumentParser):
             "--resolution_list",
             type=int,
             nargs="+",
-            help="a list of DPI resolutions supported by the scanner, separated by a space, e.g., '100, 300, 1200'"
+            help="a list of DPI resolutions supported by the scanner, separated by comma, e.g., '100, 300, 1200'"
         )
 
     def parse_args(self, p_args=None, p_namespace=None):
