@@ -1,41 +1,6 @@
-from argparse import ArgumentParser
+from classes import PathWorkflowParser, VueScanWorkflow
 from solidol.log.log import log, Logger
 from pathlib import Path
-from workflow import VueScanWorkflow
-
-
-class PathWorkflowParser(ArgumentParser):
-
-    def __init__(self):
-        ArgumentParser.__init__(self)
-        self._required_group = self.add_argument_group("required arguments")
-        self._required_group.add_argument(
-            "-w",
-            "--workflow",
-            type=str,
-            help="name of the workflow path"
-        )
-        self._required_group.add_argument(
-            "-f",
-            "--folder",
-            type=str,
-            help="name of the folder with files to process"
-        )
-        self.add_argument(
-            "-p",
-            "--pattern",
-            type=str,
-            help="files selection pattern, e.g. '*.tiff'",
-            default="*.*"
-        )
-
-    def parse_args(self, p_args=None, p_namespace=None):
-        v_result = ArgumentParser.parse_args(self, p_args, p_namespace)
-        if not getattr(v_result, "workflow", None):
-            self.error("Incorrect name of the workflow path")
-        if not getattr(v_result, "folder", None):
-            self.error("Incorrect name of the folder")
-        return v_result
 
 
 def main():
