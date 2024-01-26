@@ -77,7 +77,7 @@ class Arguments:
     }
     workflow = {
         "keys": ["-w", "--workflow"],
-        "values": {"type": str, "help": "name of the workflow path"}
+        "values": {"type": str, "help": "name of the workflow path", "required": True}
     }
     template_list = {
         "keys": ["-tl", "--template-list"],
