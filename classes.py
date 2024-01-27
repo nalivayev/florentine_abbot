@@ -167,9 +167,9 @@ class Calculator:
                 v_recommended_dpi = v_i
                 break
         if v_minimal_resolution:
-            v_recommended_dpi = max(v_minimal_resolution, v_calculated_dpi)
+            v_recommended_dpi = max(v_minimal_resolution, v_recommended_dpi)
         if v_maximal_resolution:
-            v_recommended_dpi = min(v_maximal_resolution, v_calculated_dpi)
+            v_recommended_dpi = min(v_maximal_resolution, v_recommended_dpi)
         return v_calculated_dpi, v_recommended_dpi
 
 
