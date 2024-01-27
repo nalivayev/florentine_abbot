@@ -179,6 +179,7 @@ class VueScanWorkflow:
 
         pass
 
+    _PROGRAM_SETTINGS_NAME = "program.ini"
     _WORKFLOW_SETTINGS_NAME = "workflow.ini"
     _VUESCAN_SETTINGS_NAME = "vuescan.ini"
 
@@ -203,7 +204,7 @@ class VueScanWorkflow:
         self._template_list["user_name"] = getuser()
 
     def _read_settings(self):
-        self._script_parser = self._read_settings_file(Path(__file__).with_suffix(".ini"))
+        self._script_parser = self._read_settings_file(Path(Path(__file__).parent, self._PROGRAM_SETTINGS_NAME))
         self._convert_templates_to_values(self._script_parser)
         v_workflow_settings_path_name = Path(self._workflow_path, self._WORKFLOW_SETTINGS_NAME)
         self._workflow_parser = self._read_settings_file(v_workflow_settings_path_name)
