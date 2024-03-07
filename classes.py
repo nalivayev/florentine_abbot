@@ -208,6 +208,7 @@ class VueScanWorkflow:
         self._convert_templates_to_values(self._script_parser)
         v_workflow_settings_path_name = Path(self._workflow_path, self._WORKFLOW_SETTINGS_NAME)
         self._workflow_parser = self._read_settings_file(v_workflow_settings_path_name)
+        self._convert_templates_to_values(self._script_parser)
         log(self._logger, [f"Workflow description: {self._workflow_parser['main']['description']}"])
         self._vuescan_parser = self._read_settings_file(Path(self._workflow_path, self._VUESCAN_SETTINGS_NAME))
 
