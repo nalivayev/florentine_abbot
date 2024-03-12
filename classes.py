@@ -183,12 +183,23 @@ class VueScanWorkflow:
     _WORKFLOW_SETTINGS_NAME = "workflow.ini"
     _VUESCAN_SETTINGS_NAME = "vuescan.ini"
 
+    _EXIF_TEMPLATE_NAMES = [
+        "digitization_year",
+        "digitization_month",
+        "digitization_day",
+        "digitization_hour",
+        "digitization_minute",
+        "digitization_second"
+    ]
+
     _logger: Logger
     _workflow_parser: ConfigParser
     _script_parser: ConfigParser
     _vuescan_parser: ConfigParser
     _workflow_path: Path
-    _template_list: {}
+    _user_templates: {} = {}
+    _system_templates: {} = {}
+    _output_templates: {} = {}
 
     def _read_settings_file(self, p_path: Path) -> ConfigParser:
         if Path(p_path).exists():
@@ -201,14 +212,16 @@ class VueScanWorkflow:
             raise VueScanWorkflow.Exception(f"Error loading settings from file '{p_path}'")
 
     def _add_system_templates(self):
-        self._template_list["user_name"] = getuser()
+        self._system_templates["user_name"] = getuser()
 
     def _read_settings(self):
         self._script_parser = self._read_settings_file(Path(Path(__file__).parent, self._PROGRAM_SETTINGS_NAME))
-        self._convert_templates_to_values(self._script_parser)
+        self._convert_templates_to_values(self._script_parser, self._user_templates)
+        self._convert_templates_to_values(self._script_parser, self._system_templates)
         v_workflow_settings_path_name = Path(self._workflow_path, self._WORKFLOW_SETTINGS_NAME)
         self._workflow_parser = self._read_settings_file(v_workflow_settings_path_name)
-        self._convert_templates_to_values(self._script_parser)
+        self._convert_templates_to_values(self._script_parser, self._user_templates)
+        self._convert_templates_to_values(self._script_parser, self._system_templates)
         log(self._logger, [f"Workflow description: {self._workflow_parser['main']['description']}"])
         self._vuescan_parser = self._read_settings_file(Path(self._workflow_path, self._VUESCAN_SETTINGS_NAME))
 
@@ -248,14 +261,14 @@ class VueScanWorkflow:
         else:
             raise VueScanWorkflow.Exception(f"File '{v_program_path_name}' not found")
 
-    def _convert_value(self, p_value: str) -> str:
+    def _convert_value(self, p_value: str, p_list: {}) -> str:
         v_fields = p_value.split(":")
         if len(v_fields) > 0:
             v_key = v_fields[0]
             try:
-                v_value = self._template_list[v_key]
+                v_value = p_list[v_key]
             except KeyError:
-                raise VueScanWorkflow.Exception(f"Key {v_key} not found")
+                raise VueScanWorkflow.Exception(f"Key '{v_key}' not found")
             try:
                 v_length = int(v_fields[1]) if len(v_fields) > 1 else 0
                 v_alignment = v_fields[2] if len(v_fields) > 2 and v_fields[2] in ("<", ">", "^") else "<"
@@ -268,23 +281,34 @@ class VueScanWorkflow:
         else:
             raise VueScanWorkflow.Exception("An empty template was found")
 
-    def _convert_template_to_value(self, p_template: str) -> str:
+    def _convert_template_to_value(self, p_template: str, p_list: {}) -> str:
         v_result = p_template
         for v_match in finditer("{(.+?)}", p_template):
             v_template = p_template[v_match.start():v_match.end()]
             try:
-                v_value = self._convert_value(v_template[1:-1])
+                v_value = self._convert_value(v_template[1:-1], p_list)
             except VueScanWorkflow.Exception as v_exception:
-                log(self._logger, [str(v_exception)])
+                # log(self._logger, [str(v_exception)])
                 continue
             v_result = v_result.replace(v_template, v_value)
         return v_result
 
-    def _convert_templates_to_values(self, p_parser: ConfigParser):
+    def _convert_templates_to_values(self, p_parser: ConfigParser, p_list: {}):
         if p_parser:
             for v_section in p_parser.sections():
                 for v_key, v_value in p_parser.items(v_section):
-                    p_parser[v_section][v_key] = self._convert_template_to_value(v_value)
+                    p_parser[v_section][v_key] = self._convert_template_to_value(v_value, p_list)
+
+    def _check_templates(self, p_parser: ConfigParser):
+        if p_parser:
+            for v_section in p_parser.sections():
+                for v_key, v_value in p_parser.items(v_section):
+                    for v_match in finditer("{(.+?)}", v_value):
+                        v_template = v_value[v_match.start() + 1:v_match.end() - 1]
+                        v_fields = v_template.split(":")
+                        if len(v_fields) > 0:
+                            if not v_fields[0] in self._system_templates and not v_fields[0] in self._user_templates and not v_fields[0] in self._output_templates:
+                                log(self._logger, [f"Template '{v_fields[0]}' not found"])
 
     def _add_output_file_templates(self, p_path: Path) -> {}:
         v_datetime = None
@@ -299,9 +323,8 @@ class VueScanWorkflow:
         else:
             v_datetime = datetime.fromtimestamp(getmtime(p_path))
         if v_datetime:
-            for v_key in ["digitization_year", "digitization_month", "digitization_day", "digitization_hour",
-                          "digitization_minute", "digitization_second"]:
-                self._template_list[v_key] = getattr(v_datetime, v_key.replace("digitization_", ""), "")
+            for v_key in self._EXIF_TEMPLATE_NAMES:
+                self._output_templates[v_key] = getattr(v_datetime, v_key.replace("digitization_", ""), "")
 
     def _extract_exif_tags(self, p_path: Path) -> {}:
         try:
@@ -318,7 +341,9 @@ class VueScanWorkflow:
         )
         if v_input_path.exists():
             self._add_output_file_templates(v_input_path)
-            self._convert_templates_to_values(self._workflow_parser)
+            self._convert_templates_to_values(self._workflow_parser, self._output_templates)
+            self._check_templates(self._workflow_parser)
+            self._check_templates(self._vuescan_parser)
             if not Path(self._workflow_parser["main"]["output_path"]).exists():
                 makedirs(self._workflow_parser["main"]["output_path"], True)
             v_output_path = Path(
@@ -360,12 +385,12 @@ class VueScanWorkflow:
         else:
             log(self._logger, ["VueScan logging file not found"])
 
-    def run(self, p_logger: Logger, p_workflow_path: str, p_template_list: {}):
-        self._template_list = p_template_list if p_template_list else {}
+    def run(self, p_logger: Logger, p_workflow_path: str, p_user_templates: {}):
+        self._add_system_templates()
+        self._user_templates = p_user_templates if p_user_templates else {}
         self._logger = p_logger
         self._workflow_path = Path(p_workflow_path).resolve()
         log(self._logger, ["Starting the workflow"])
-        self._add_system_templates()
         self._read_settings()
         self._merge_settings()
         self._overwrite_vuescan_settings_file()
