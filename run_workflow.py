@@ -9,7 +9,7 @@ def main():
     v_args = v_parser.parse_args()
     v_workflow = VueScanWorkflow()
     try:
-        v_workflow.run(
+        v_workflow(
             v_logger,
             getattr(v_args, "workflow", ""),
             getattr(v_args, "template_list", {})

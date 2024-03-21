@@ -5,9 +5,11 @@ def main():
     v_parser = CalculatorParser()
     v_args = v_parser.parse_args()
     v_calculator = Calculator()
-    v_dpi = v_calculator.do(
-        v_args.photo_size,
-        v_args.image_size,
+    v_dpi = v_calculator(
+        v_args.photo_width,
+        v_args.photo_height,
+        v_args.image_width,
+        v_args.image_height,
         v_args.minimal_resolution,
         v_args.maximal_resolution,
         v_args.resolution_list

@@ -19,10 +19,8 @@ def main():
     if v_files:
         for v_file in v_files:
             try:
-                log(v_logger, ["\n"])
-                log(v_logger, ["\n"])
-                log(v_logger, ["\n"])
-                v_workflow.run(v_logger, v_workflow_path, {"source_filename": v_file})
+                log(v_logger, ["\n\n\n"])
+                v_workflow(v_logger, v_workflow_path, {"source_filename": v_file})
                 v_count += 1
             except VueScanWorkflow.Exception as v_exception:
                 log(v_logger, [str(v_exception)])

@@ -45,26 +45,40 @@ class Arguments:
             raise ArgumentError(None, "Invalid digitized image side size")
         return v_value
 
-    photo_size = {
-        "keys": ["-ps", "--photo-size"],
+    photo_width = {
+        "keys": ["-pw", "--photo-width"],
         "values": {
             "type": check_photo_size,
-            "help": "side size of a photograph or picture in centimeters"
+            "help": "width of a photograph or picture in centimeters"
         }
     }
-    image_size = {
-        "keys": ["-is", "--image-size"],
+    photo_height = {
+        "keys": ["-ph", "--photo-height"],
+        "values": {
+            "type": check_photo_size,
+            "help": "height of a photograph or picture in centimeters"
+        }
+    }
+    image_width = {
+        "keys": ["-iw", "--image-width"],
         "values": {
             "type": check_image_size,
-            "help": "desired side size of the digitized image in pixels"
+            "help": "desired width of the digitized image in pixels"
+        }
+    }
+    image_height = {
+        "keys": ["-ih", "--image-height"],
+        "values": {
+            "type": check_image_size,
+            "help": "desired height of the digitized image in pixels"
         }
     }
     minimal_resolution = {
-        "keys": ["-minr", "--minimal-resolution"],
+        "keys": ["-mnr", "--minimal-resolution"],
         "values": {"type": int, "help": "minimum resolution when scanning in DPI"}
     }
     maximal_resolution = {
-        "keys": ["-maxr", "--maximal-resolution"],
+        "keys": ["-mxr", "--maximal-resolution"],
         "values": {"type": int, "help": "maximal resolution when scanning in DPI"}
     }
     resolution_list = {
@@ -100,8 +114,10 @@ class CalculatorParser(ArgumentParser):
     def __init__(self):
         ArgumentParser.__init__(self)
         self._required_group = self.add_argument_group("required arguments")
-        self._required_group.add_argument(*Arguments.photo_size["keys"], **Arguments.photo_size["values"])
-        self._required_group.add_argument(*Arguments.image_size["keys"], **Arguments.image_size["values"])
+        self._required_group.add_argument(*Arguments.photo_width["keys"], **Arguments.photo_width["values"])
+        self._required_group.add_argument(*Arguments.photo_height["keys"], **Arguments.photo_height["values"])
+        self._required_group.add_argument(*Arguments.image_width["keys"], **Arguments.image_width["values"])
+        self._required_group.add_argument(*Arguments.image_height["keys"], **Arguments.image_height["values"])
         self.add_argument(*Arguments.minimal_resolution["keys"], **Arguments.minimal_resolution["values"])
         self.add_argument(*Arguments.maximal_resolution["keys"], **Arguments.maximal_resolution["values"])
         self.add_argument(*Arguments.resolution_list["keys"], **Arguments.resolution_list["values"])
@@ -130,8 +146,11 @@ class PathWorkflowParser(ArgumentParser):
 
 class Calculator:
 
-    @staticmethod
-    def do(p_photo_size, p_image_size, p_minimal_resolution, p_maximal_resolution, p_resolution_list) -> tuple:
+    def __call__(self, p_photo_width, p_photo_height, p_image_width, p_image_height, p_minimal_resolution, p_maximal_resolution, p_resolution_list) -> tuple:
+        v_photo_width = max(p_photo_width, p_photo_height)
+        v_photo_height = min(p_photo_width, p_photo_height)
+        v_image_width = max(p_image_width, p_image_height)
+        v_image_height = min(p_image_width, p_image_height)
         v_resolution_list = sorted(p_resolution_list) if p_resolution_list else []
         if p_minimal_resolution:
             if len(v_resolution_list) > 0:
@@ -159,12 +178,16 @@ class Calculator:
                 v_maximal_resolution = v_resolution_list[len(v_resolution_list) - 1]
             else:
                 v_maximal_resolution = None
-        v_photo_size_in_inches = p_photo_size / 2.54
-        v_calculated_dpi = p_image_size / v_photo_size_in_inches
+        v_calculated_width_dpi = v_image_width / (v_photo_width / 2.54)
+        v_calculated_height_dpi = v_image_height / (v_photo_height / 2.54)
+        v_calculated_dpi = min(v_calculated_width_dpi, v_calculated_height_dpi)
         v_recommended_dpi = v_calculated_dpi
-        for v_i in v_resolution_list:
-            if v_recommended_dpi < v_i:
-                v_recommended_dpi = v_i
+        for v_index, v_value in enumerate(v_resolution_list):
+            if v_recommended_dpi < v_value:
+                if v_index > 0 and v_value - v_recommended_dpi > v_recommended_dpi - v_resolution_list[v_index - 1]:
+                    v_recommended_dpi = v_resolution_list[v_index - 1]
+                else:
+                    v_recommended_dpi = v_value
                 break
         if v_minimal_resolution:
             v_recommended_dpi = max(v_minimal_resolution, v_recommended_dpi)
@@ -343,7 +366,9 @@ class VueScanWorkflow:
             raise VueScanWorkflow.Exception(f"Output file '{v_input_path}' not found")
 
     def _move_logging_file(self):
-        v_input_path = Path(self._get_script_value("main", "logging_path"), self._get_script_value("main", "logging_name"))
+        v_input_path = Path(
+            self._get_script_value("main", "logging_path"), self._get_script_value("main", "logging_name")
+        )
         if v_input_path.exists():
             v_output_path = Path(
                 self._get_workflow_value("main", "output_path"),
@@ -362,7 +387,7 @@ class VueScanWorkflow:
         else:
             log(self._logger, ["VueScan logging file not found"])
 
-    def run(self, p_logger: Logger, p_workflow_path: str, p_templates: {}):
+    def __call__(self, p_logger: Logger, p_workflow_path: str, p_templates: {}):
         self._templates = p_templates if p_templates else {}
         self._add_system_templates()
         self._logger = p_logger
