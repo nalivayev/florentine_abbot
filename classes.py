@@ -146,54 +146,46 @@ class PathWorkflowParser(ArgumentParser):
 
 class Calculator:
 
-    def __call__(self, p_photo_width, p_photo_height, p_image_width, p_image_height, p_minimal_resolution, p_maximal_resolution, p_resolution_list) -> tuple:
+    def __call__(self, p_photo_width, p_photo_height, p_image_width, p_image_height, p_minimal_dpi, p_maximal_dpi, p_dpi_list) -> tuple:
         v_photo_width = max(p_photo_width, p_photo_height)
         v_photo_height = min(p_photo_width, p_photo_height)
         v_image_width = max(p_image_width, p_image_height)
         v_image_height = min(p_image_width, p_image_height)
-        v_resolution_list = sorted(p_resolution_list) if p_resolution_list else []
-        if p_minimal_resolution:
-            if len(v_resolution_list) > 0:
-                if v_resolution_list[0] > p_minimal_resolution:
-                    v_minimal_resolution = v_resolution_list[0]
-                else:
-                    v_minimal_resolution = p_minimal_resolution
+        v_dpi_list = sorted(p_dpi_list) if p_dpi_list else []
+        if p_minimal_dpi:
+            if len(v_dpi_list) > 0:
+                v_minimal_dpi = v_dpi_list[0] if v_dpi_list[0] > p_minimal_dpi else p_minimal_dpi
             else:
-                v_minimal_resolution = p_minimal_resolution
+                v_minimal_dpi = p_minimal_dpi
         else:
-            if len(v_resolution_list) > 0:
-                v_minimal_resolution = v_resolution_list[0]
+            v_minimal_dpi = v_dpi_list[0] if len(v_dpi_list) > 0 else None
+        if p_maximal_dpi:
+            if len(v_dpi_list) > 0:
+                v_maximal_dpi = v_dpi_list[-1] if v_dpi_list[-1] < p_maximal_dpi else p_maximal_dpi
             else:
-                v_minimal_resolution = None
-        if p_maximal_resolution:
-            if len(v_resolution_list) > 0:
-                if v_resolution_list[len(v_resolution_list) - 1] < p_maximal_resolution:
-                    v_maximal_resolution = v_resolution_list[len(v_resolution_list) - 1]
-                else:
-                    v_maximal_resolution = p_maximal_resolution
-            else:
-                v_maximal_resolution = p_maximal_resolution
+                v_maximal_dpi = p_maximal_dpi
         else:
-            if len(v_resolution_list) > 0:
-                v_maximal_resolution = v_resolution_list[len(v_resolution_list) - 1]
-            else:
-                v_maximal_resolution = None
+            v_maximal_dpi = v_dpi_list[-1] if len(v_dpi_list) > 0 else None
         v_calculated_width_dpi = v_image_width / (v_photo_width / 2.54)
         v_calculated_height_dpi = v_image_height / (v_photo_height / 2.54)
         v_calculated_dpi = min(v_calculated_width_dpi, v_calculated_height_dpi)
         v_recommended_dpi = v_calculated_dpi
-        for v_index, v_value in enumerate(v_resolution_list):
+        for v_index, v_value in enumerate(v_dpi_list):
             if v_recommended_dpi < v_value:
-                if v_index > 0 and v_value - v_recommended_dpi > v_recommended_dpi - v_resolution_list[v_index - 1]:
-                    v_recommended_dpi = v_resolution_list[v_index - 1]
+                if v_index > 0 and v_value - v_recommended_dpi > v_recommended_dpi - v_dpi_list[v_index - 1]:
+                    v_recommended_dpi = v_dpi_list[v_index - 1]
                 else:
                     v_recommended_dpi = v_value
                 break
-        if v_minimal_resolution:
-            v_recommended_dpi = max(v_minimal_resolution, v_recommended_dpi)
-        if v_maximal_resolution:
-            v_recommended_dpi = min(v_maximal_resolution, v_recommended_dpi)
-        return v_calculated_dpi, v_recommended_dpi
+        if v_minimal_dpi:
+            v_recommended_dpi = max(v_minimal_dpi, v_recommended_dpi)
+        if v_maximal_dpi:
+            v_recommended_dpi = min(v_maximal_dpi, v_recommended_dpi)
+        return (
+            v_calculated_dpi,
+            v_recommended_dpi,
+            [(v_dpi, v_dpi * v_photo_width / 2.54, v_dpi * v_photo_height / 2.54) for v_dpi in v_dpi_list]
+        )
 
 
 class VueScanWorkflow:
