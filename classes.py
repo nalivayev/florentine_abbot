@@ -184,7 +184,7 @@ class Calculator:
         return (
             v_calculated_dpi,
             v_recommended_dpi,
-            [(v_dpi, v_dpi * v_photo_width / 2.54, v_dpi * v_photo_height / 2.54) for v_dpi in v_dpi_list]
+            [(v_dpi, int(v_dpi * v_photo_width / 2.54), int(v_dpi * v_photo_height / 2.54)) for v_dpi in v_dpi_list]
         )
 
 
