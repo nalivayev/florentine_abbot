@@ -168,7 +168,7 @@ class Calculator:
             v_maximal_dpi = v_dpi_list[-1] if len(v_dpi_list) > 0 else None
         v_calculated_width_dpi = v_image_width / (v_photo_width / 2.54)
         v_calculated_height_dpi = v_image_height / (v_photo_height / 2.54)
-        v_calculated_dpi = min(v_calculated_width_dpi, v_calculated_height_dpi)
+        v_calculated_dpi = max(v_calculated_width_dpi, v_calculated_height_dpi)
         v_recommended_dpi = v_calculated_dpi
         for v_index, v_value in enumerate(v_dpi_list):
             if v_recommended_dpi < v_value:
