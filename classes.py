@@ -105,6 +105,14 @@ class Arguments:
         "keys": ["-p", "--pattern"],
         "values": {"type": str, "default": "*.*", "help": "files selection pattern, e.g. '*.tiff'"}
     }
+    rounding = {
+        "keys": ["-rnd", "--rounding"],
+        "values": {
+            "choices": ["mx", "mn", "nr"],
+            "default": "nr",
+            "help": "how to round the calculated resolution value"
+        }
+    }
 
 
 class CalculatorParser(ArgumentParser):
@@ -121,6 +129,7 @@ class CalculatorParser(ArgumentParser):
         self.add_argument(*Arguments.minimal_resolution["keys"], **Arguments.minimal_resolution["values"])
         self.add_argument(*Arguments.maximal_resolution["keys"], **Arguments.maximal_resolution["values"])
         self.add_argument(*Arguments.resolution_list["keys"], **Arguments.resolution_list["values"])
+        self.add_argument(*Arguments.rounding["keys"], **Arguments.rounding["values"])
 
 
 class WorkflowParser(ArgumentParser):
@@ -146,7 +155,7 @@ class PathWorkflowParser(ArgumentParser):
 
 class Calculator:
 
-    def __call__(self, p_photo_width, p_photo_height, p_image_width, p_image_height, p_minimal_dpi, p_maximal_dpi, p_dpi_list) -> tuple:
+    def __call__(self, p_photo_width, p_photo_height, p_image_width, p_image_height, p_minimal_dpi, p_maximal_dpi, p_dpi_list, p_rounding) -> tuple:
         v_photo_width = max(p_photo_width, p_photo_height)
         v_photo_height = min(p_photo_width, p_photo_height)
         v_image_width = max(p_image_width, p_image_height)
@@ -172,10 +181,16 @@ class Calculator:
         v_recommended_dpi = v_calculated_dpi
         for v_index, v_value in enumerate(v_dpi_list):
             if v_recommended_dpi < v_value:
-                if v_index > 0 and v_value - v_recommended_dpi > v_recommended_dpi - v_dpi_list[v_index - 1]:
-                    v_recommended_dpi = v_dpi_list[v_index - 1]
-                else:
-                    v_recommended_dpi = v_value
+                match p_rounding:
+                    case "nr":
+                        if v_index > 0 and v_value - v_recommended_dpi > v_recommended_dpi - v_dpi_list[v_index - 1]:
+                            v_recommended_dpi = v_dpi_list[v_index - 1]
+                        else:
+                            v_recommended_dpi = v_value
+                    case "mx":
+                        v_recommended_dpi = v_value
+                    case "mn":
+                        v_recommended_dpi = v_dpi_list[v_index - 1]
                 break
         if v_minimal_dpi:
             v_recommended_dpi = max(v_minimal_dpi, v_recommended_dpi)
