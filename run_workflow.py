@@ -1,21 +1,22 @@
-from classes import WorkflowParser, VueScanWorkflow
+from classes.parsers import WorkflowParser
+from classes.workflow import VueScanWorkflow
 from solidol.log.log import log, Logger
 from pathlib import Path
 
 
 def main():
-    v_logger = Logger(str(Path(__file__).with_suffix(".log")), "workflow")
-    v_parser = WorkflowParser()
-    v_args = v_parser.parse_args()
-    v_workflow = VueScanWorkflow()
+    logger = Logger(str(Path(__file__).with_suffix(".log")), "workflow")
+    parser = WorkflowParser()
+    args = parser.parse_args()
+    workflow = VueScanWorkflow()
     try:
-        v_workflow(
-            v_logger,
-            getattr(v_args, "workflow", ""),
-            getattr(v_args, "template_list", {})
+        workflow(
+            logger,
+            getattr(args, "workflow", ""),
+            getattr(args, "template_list", {})
         )
-    except VueScanWorkflow.Exception as v_exception:
-        log(v_logger, [str(v_exception)])
+    except VueScanWorkflow.Exception as e:
+        log(logger, [str(e)])
 
 
 if __name__ == "__main__":
