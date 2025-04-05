@@ -16,7 +16,7 @@ class Arguments:
         and stores them in the namespace.
         """
         def __call__(self, parser, namespace, value, option=None):
-            dictionary = {}
+            dictionary = dict[str, str]
             if value:
                 for pair in value:
                     key, value = pair.split("=")
