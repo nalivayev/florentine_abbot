@@ -15,21 +15,21 @@ class Arguments:
         This action converts input strings in format 'key=value' into dictionary entries
         and stores them in the namespace.
         """
-        def __call__(self, p_parser, p_namespace, p_value, p_option=None):
-            v_dictionary = {}
-            if p_value:
-                for v_pair in p_value:
-                    v_key, v_value = v_pair.split("=")
-                    v_dictionary[v_key] = v_value
-            setattr(p_namespace, self.dest, v_dictionary)
+        def __call__(self, parser, namespace, value, option=None):
+            dictionary = {}
+            if value:
+                for pair in value:
+                    key, value = pair.split("=")
+                    dictionary[key] = value
+            setattr(namespace, self.dest, dictionary)
 
     @staticmethod
-    def check_photo_size(p_value):
+    def check_photo_size(value):
         """
         Validate and convert photo dimension input.
         
         Args:
-            p_value: Input value to validate as a photo dimension
+            value: Input value to validate as a photo dimension
             
         Returns:
             float: Validated photo dimension value
@@ -39,20 +39,20 @@ class Arguments:
             ArgumentError: If value is not positive
         """
         try:
-            v_value = float(p_value)
+            value = float(value)
         except ValueError:
             raise ArgumentTypeError("Invalid photo side size value")
-        if v_value <= 0:
+        if value <= 0:
             raise ArgumentError(None, "Invalid photo side size")
-        return v_value
+        return value
 
     @staticmethod
-    def check_image_size(p_value):
+    def check_image_size(value):
         """
         Validate and convert image dimension input.
         
         Args:
-            p_value: Input value to validate as an image dimension
+            value: Input value to validate as an image dimension
             
         Returns:
             int: Validated image dimension value
@@ -62,12 +62,12 @@ class Arguments:
             ArgumentError: If value is not positive
         """
         try:
-            v_value = int(p_value)
+            value = int(value)
         except ValueError:
             raise ArgumentTypeError("Invalid digitized image side size value")
-        if v_value <= 0:
+        if value <= 0:
             raise ArgumentError(None, "Invalid digitized image side size")
-        return v_value
+        return value
 
     photo_width = {
         "keys": ["-pw", "--photo-width"],
