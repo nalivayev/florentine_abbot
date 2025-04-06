@@ -17,6 +17,9 @@ class VueScanWorkflow:
     for VueScan operations, including template processing and EXIF data handling.
     """
 
+    _VUESCAN_SETTINGS_NAME = "vuescan.ini"
+    _WORKFLOW_SETTINGS_NAME = "workflow.ini"
+
     class Exception(Exception):
         """Custom exception class for VueScan workflow errors."""
         pass

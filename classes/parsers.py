@@ -1,5 +1,5 @@
 from argparse import ArgumentParser, _ArgumentGroup
-from arguments import Arguments
+from .arguments import Arguments
 
 class CalculatorParser(ArgumentParser):
     """

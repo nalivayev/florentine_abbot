@@ -1,10 +1,24 @@
 from classes.parsers import PathWorkflowParser
-from classes.workflow import VueScanWorkflow
+from classes.VueScan.workflow import VueScanWorkflow
 from solidol.log.log import log, Logger
 from pathlib import Path
 
 
 def main():
+    """Main function that processes files using VueScan workflow.
+    
+    The function performs the following steps:
+    1. Initializes logging system
+    2. Parses command line arguments
+    3. Searches for files matching specified pattern
+    4. Processes each file through VueScan workflow
+    5. Handles errors and logs processing results
+    
+    Command line arguments:
+        --folder: Directory to process (default: current directory)
+        --pattern: File pattern to match (default: '*.*')
+        --workflow: Path to custom workflow configuration (optional)
+    """
     logger = Logger(str(Path(__file__).with_suffix(".log")), "workflow")
     parser = PathWorkflowParser()
     args = parser.parse_args()
@@ -31,4 +45,8 @@ def main():
 
 
 if __name__ == "__main__":
+    """Entry point when script is executed directly.
+    
+    Calls the main function to start file processing workflow.
+    """
     main()
