@@ -76,6 +76,7 @@ class Arguments:
             "help": "width of a photograph or picture in centimeters"
         }
     }
+
     photo_height = {
         "keys": ["-ph", "--photo-height"],
         "values": {
@@ -83,6 +84,7 @@ class Arguments:
             "help": "height of a photograph or picture in centimeters"
         }
     }
+
     image_width = {
         "keys": ["-iw", "--image-width"],
         "values": {
@@ -90,6 +92,7 @@ class Arguments:
             "help": "desired width of the digitized image in pixels"
         }
     }
+
     image_height = {
         "keys": ["-ih", "--image-height"],
         "values": {
@@ -97,14 +100,17 @@ class Arguments:
             "help": "desired height of the digitized image in pixels"
         }
     }
+
     minimal_resolution = {
         "keys": ["-mnr", "--minimal-resolution"],
         "values": {"type": int, "help": "minimum resolution when scanning in DPI"}
     }
+
     maximal_resolution = {
         "keys": ["-mxr", "--maximal-resolution"],
         "values": {"type": int, "help": "maximal resolution when scanning in DPI"}
     }
+
     resolution_list = {
         "keys": ["-rl", "--resolution-list"],
         "values": {
@@ -113,22 +119,27 @@ class Arguments:
             "help": "a list of DPI resolutions supported by the scanner, separated by comma, e.g., '100, 300, 1200'"
         }
     }
+
     workflow = {
         "keys": ["-w", "--workflow"],
         "values": {"type": str, "help": "name of the workflow path", "required": True}
     }
+
     template_list = {
         "keys": ["-tl", "--template-list"],
         "values": {"type": str, "nargs": "+", "action": KeyValueAction, "help": "list of templates"}
     }
+
     folder = {
         "keys": ["-f", "--folder"],
         "values": {"type": str, "help": "name of the folder with files to process"}
     }
+
     pattern = {
         "keys": ["-p", "--pattern"],
         "values": {"type": str, "default": "*.*", "help": "files selection pattern, e.g. '*.tiff'"}
     }
+    
     rounding = {
         "keys": ["-rnd", "--rounding"],
         "values": {
