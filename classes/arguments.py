@@ -1,4 +1,4 @@
-from argparse import ArgumentParser, ArgumentError, ArgumentTypeError, Action
+from argparse import ArgumentError, ArgumentTypeError, Action
 
 class Arguments:
     """
@@ -16,7 +16,7 @@ class Arguments:
         and stores them in the namespace.
         """
         def __call__(self, parser, namespace, value, option=None):
-            dictionary = dict[str, str]
+            dictionary = {}
             if value:
                 for pair in value:
                     key, value = pair.split("=")
