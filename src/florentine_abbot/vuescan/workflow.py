@@ -1,91 +1,110 @@
 from configparser import ConfigParser, ExtendedInterpolation
-from solidol.log.log import log, Logger
 from shutil import SameFileError, move
-from solidol.image.exif import EXIF
-from datetime import datetime
 from os.path import getmtime
 from getpass import getuser
 from subprocess import run
 from pathlib import Path
 from re import finditer
 from os import makedirs
+import datetime
 
-class VueScanWorkflow:
-    """A workflow manager for VueScan scanning operations.
-    
-    This class handles the complete workflow from configuration to file management
+from florentine_abbot.recorder import log, Recorder
+from florentine_abbot.exifer import Exifer
+
+
+class Workflow:
+    """
+    Workflow manager for VueScan scanning operations.
+
+    Handles the complete workflow from configuration to file management
     for VueScan operations, including template processing and EXIF data handling.
     """
 
     _VUESCAN_SETTINGS_NAME = "vuescan.ini"
     _WORKFLOW_SETTINGS_NAME = "workflow.ini"
+    _EXIF_TEMPLATE_NAMES = [
+        "digitization_year",
+        "digitization_month",
+        "digitization_day",
+        "digitization_hour",
+        "digitization_minute",
+        "digitization_second"
+    ]
 
     class Exception(Exception):
-        """Custom exception class for VueScan workflow errors."""
+        """Custom exception for VueScan workflow errors."""
         pass
 
     def _read_settings_file(self, path: Path) -> ConfigParser:
-        """Read and parse a configuration file.
+        """
+        Read and parse a configuration file.
 
         Args:
-            path: Path to the configuration file to read.
+            path (Path): Path to the configuration file to read.
 
         Returns:
-            ConfigParser instance with loaded configuration.
+            ConfigParser: Instance with loaded configuration.
 
         Raises:
-            VueScanWorkflow.Exception: If the file cannot be read or doesn't exist.
+            Workflow.Exception: If the file cannot be read or doesn't exist.
         """
         if Path(path).exists():
-            log(self._logger, [f"Loading settings from '{str(path)}'"])
+            log(self._recorder, [f"Loading settings from '{str(path)}'"])
             parser = ConfigParser(interpolation=ExtendedInterpolation())
             parser.read(path)
-            log(self._logger, ["Settings loaded"])
+            log(self._recorder, ["Settings loaded"])
             return parser
         else:
-            raise VueScanWorkflow.Exception(f"Error loading settings from file '{path}'")
+            raise Workflow.Exception(f"Error loading settings from file '{path}'")
 
     def _add_system_templates(self):
-        """Add system-provided templates (like current username) to the templates dictionary."""
+        """
+        Add system-provided templates (like current username) to the templates dictionary.
+        """
         self._templates["user_name"] = getuser()
 
     def _read_settings(self):
-        """Read both script and workflow configuration files and initialize parsers."""
+        """
+        Read both script and workflow configuration files and initialize parsers.
+        """
         self._script_parser = self._read_settings_file(Path(Path(__file__).parent, self._VUESCAN_SETTINGS_NAME))
         self._workflow_parser = self._read_settings_file(Path(self._workflow_path, self._WORKFLOW_SETTINGS_NAME))
-        log(self._logger, [f"Workflow description: {self._get_workflow_value('main', 'description')}"])
+        log(self._recorder, [f"Workflow description: {self._get_workflow_value('main', 'description')}"])
 
     def _get_workflow_value(self, section, key):
-        """Get a value from workflow configuration with template substitution.
+        """
+        Get a value from workflow configuration with template substitution.
 
         Args:
-            section: Configuration section name.
-            key: Key within the section.
+            section (str): Configuration section name.
+            key (str): Key within the section.
 
         Returns:
-            The configuration value with all templates resolved.
+            str: The configuration value with all templates resolved.
         """
         value = self._workflow_parser[section][key]
-        return self._convert_template_to_value(value)
+        return self._replace_templates_to_value(value)
 
     def _get_script_value(self, section, key):
-        """Get a value from script configuration with template substitution.
+        """
+        Get a value from script configuration with template substitution.
 
         Args:
-            section: Configuration section name.
-            key: Key within the section.
+            section (str): Configuration section name.
+            key (str): Key within the section.
 
         Returns:
-            The configuration value with all templates resolved.
+            str: The configuration value with all templates resolved.
         """
         value = self._script_parser[section][key]
-        return self._convert_template_to_value(value)
+        return self._replace_templates_to_value(value)
 
     def _overwrite_vuescan_settings_file(self):
-        """Generate and overwrite VueScan settings file based on workflow configuration.
+        """
+        Generate and overwrite VueScan settings file based on workflow configuration.
 
         Raises:
-            VueScanWorkflow.Exception: If there's an error writing the file.
+            Workflow.Exception: If there's an error writing the file.
         """
         parser = ConfigParser()
         parser.add_section("VueScan")
@@ -102,14 +121,15 @@ class VueScanWorkflow:
             with open(path, "w") as file:
                 parser.write(file)
         except (SameFileError, OSError):
-            raise VueScanWorkflow.Exception("Error overwriting the VueScan settings file")
-        log(self._logger, [f"VueScan settings file '{path}' overwritten"])
+            raise Workflow.Exception("Error overwriting the VueScan settings file")
+        log(self._recorder, [f"VueScan settings file '{path}' overwritten"])
 
     def _run_vuescan(self):
-        """Execute the VueScan program with configured settings.
+        """
+        Execute the VueScan program with configured settings.
 
         Raises:
-            VueScanWorkflow.Exception: If VueScan executable is not found.
+            Workflow.Exception: If VueScan executable is not found.
         """
         program_path = Path(
             self._get_script_value("main", "program_path"), self._get_script_value("main", "program_name")
@@ -118,26 +138,27 @@ class VueScanWorkflow:
             output_path_name = self._get_workflow_value("vuescan", "output_path")
             if not Path(output_path_name).exists():
                 makedirs(output_path_name, True)
-            log(self._logger, [f"Launching VueScan from '{program_path}'"])
+            log(self._recorder, [f"Launching VueScan from '{program_path}'"])
             run(
                 f'cd /D "{self._get_script_value("main", "program_path")}" & {self._get_script_value("main", "program_name")}',
                 shell=True
             )
-            log(self._logger, ["VueScan is closed"])
+            log(self._recorder, ["VueScan is closed"])
         else:
-            raise VueScanWorkflow.Exception(f"File '{program_path}' not found")
+            raise Workflow.Exception(f"File '{program_path}' not found")
 
     def _convert_value(self, value: str) -> str:
-        """Convert a template string to its actual value using the templates dictionary.
+        """
+        Convert a template string to its actual value using the templates dictionary.
 
         Args:
-            value: Template string to convert (e.g., "{key:length:alignment:placeholder}").
+            value (str): Template string to convert (e.g., "{key:length:alignment:placeholder}").
 
         Returns:
-            Formatted string with the template replaced by its actual value.
+            str: Formatted string with the template replaced by its actual value.
 
         Raises:
-            VueScanWorkflow.Exception: If template is invalid or key not found.
+            Workflow.Exception: If template is invalid or key not found.
         """
         fields = value.split(":")
         if len(fields) > 0:
@@ -145,7 +166,7 @@ class VueScanWorkflow:
             try:
                 value = self._templates[key]
             except KeyError:
-                raise VueScanWorkflow.Exception(f"Key '{key}' not found")
+                raise Workflow.Exception(f"Key '{key}' not found")
             try:
                 length = int(fields[1]) if len(fields) > 1 else 0
                 alignment = fields[2] if len(fields) > 2 and fields[2] in ("<", ">", "^") else "<"
@@ -154,72 +175,76 @@ class VueScanWorkflow:
                 result = result.format(str(value))
                 return result
             except ValueError:
-                raise VueScanWorkflow.Exception("Template conversion error")
+                raise Workflow.Exception("Template conversion error")
         else:
-            raise VueScanWorkflow.Exception("An empty template was found")
+            raise Workflow.Exception("An empty template was found")
 
-    def _convert_template_to_value(self, template: str) -> str:
-        """Replace all templates in a string with their corresponding values.
+    def _replace_templates_to_value(self, string: str) -> str:
+        """
+        Replace all templates in a string with their corresponding values.
 
         Args:
-            template: String containing template placeholders.
+            string (str): String containing template placeholders.
 
         Returns:
-            String with all templates replaced by their values.
+            str: String with all templates replaced by their values.
         """
-        result = template
-        for match in finditer("{(.+?)}", template):
-            template = template[match.start():match.end()]
+        result = string
+        for match in finditer("{(.+?)}", string):
+            template = string[match.start():match.end()]
             try:
                 value = self._convert_value(template[1:-1])
-            except VueScanWorkflow.Exception:
-                log(self._logger, [f"Error converting template '{template[1:-1]}' to value"])
+            except Workflow.Exception:
+                log(self._recorder, [f"Error converting template '{string[1:-1]}' to value"])
                 continue
             result = result.replace(template, value)
         return result
 
     def _add_output_file_templates(self, path: Path) -> dict[str, str]:
-        """Extract EXIF data from scanned file and add datetime templates.
+        """
+        Extract EXIF data from scanned file and add datetime templates.
 
         Args:
-            path: Path to the scanned file.
+            path (Path): Path to the scanned file.
         """
-        datetime = None
+        moment = None
         if path.suffix.lower() in [".tiff", ".tif", ".jpeg", ".jpg"]:
             tags = self._extract_exif_tags(path)
-            value = tags.get(EXIF.EXIFIFD, {}).get("DateTimeDigitized", "")
+            value = tags.get(Exifer.EXIFIFD, {}).get("DateTimeDigitized", "")
             if value:
                 try:
-                    datetime = EXIF.convert_value_to_datetime(value.decode())
-                except EXIF.Exception:
+                    moment = Exifer.convert_value_to_datetime(value.decode())
+                except Exifer.Exception:
                     return
         else:
-            datetime = datetime.fromtimestamp(getmtime(path))
-        if datetime:
+            moment = datetime.fromtimestamp(getmtime(path))
+        if moment:
             for key in self._EXIF_TEMPLATE_NAMES:
-                self._templates[key] = getattr(datetime, key.replace("digitization_", ""), "")
+                self._templates[key] = getattr(moment, key.replace("digitization_", ""), "")
 
     def _extract_exif_tags(self, path: Path) -> dict[str, str]:
-        """Extract EXIF metadata from an image file.
+        """
+        Extract EXIF metadata from an image file.
 
         Args:
-            path: Path to the image file.
+            path (Path): Path to the image file.
 
         Returns:
-            Dictionary of EXIF tags or empty dict if extraction fails.
+            dict: Dictionary of EXIF tags or empty dict if extraction fails.
         """
         try:
-            return EXIF.extract(str(path))
-        except EXIF.Exception as e:
-            log(self._logger, [str(e)])
-            log(self._logger, [f"Unable to extract EXIF from file '{path.name}'"])
+            return Exifer.extract(str(path))
+        except Exifer.Exception as e:
+            log(self._recorder, [str(e)])
+            log(self._recorder, [f"Unable to extract EXIF from file '{path.name}'"])
             return {}
 
     def _move_output_file(self):
-        """Move the scanned file from VueScan output to final destination.
+        """
+        Move the scanned file from VueScan output to final destination.
 
         Raises:
-            VueScanWorkflow.Exception: If output file not found or move fails.
+            Workflow.Exception: If output file not found or move fails.
         """
         input_path = Path(
             self._get_workflow_value("vuescan", "output_path"),
@@ -236,19 +261,21 @@ class VueScanWorkflow:
             )
             try:
                 move(input_path, output_path)
-                log(self._logger, [
+                log(self._recorder, [
                     f"Scanned file '{input_path.name}' moved from '{input_path.parent}' to the '{output_path.parent}'",
                     f"The name of the final file is '{output_path.name}'"
                 ])
             except OSError:
-                raise VueScanWorkflow.Exception(
+                raise Workflow.Exception(
                     f"Error moving resulting file from '{input_path}' to '{output_path}'"
                 )
         else:
-            raise VueScanWorkflow.Exception(f"Output file '{input_path}' not found")
+            raise Workflow.Exception(f"Output file '{input_path}' not found")
 
     def _move_logging_file(self):
-        """Move VueScan log file to the output directory."""
+        """
+        Move VueScan log file to the output directory.
+        """
         input_path = Path(
             self._get_script_value("main", "logging_path"), self._get_script_value("main", "logging_name")
         )
@@ -259,33 +286,34 @@ class VueScanWorkflow:
             )
             try:
                 move(input_path, output_path)
-                log(self._logger, [
+                log(self._recorder, [
                     f"Logging file '{input_path.name}' moved from '{output_path.parent}' to the '{output_path.parent}'",
                     f"The name of the final file is '{output_path.name}'"
                 ])
             except OSError:
-                raise VueScanWorkflow.Exception(
+                raise Workflow.Exception(
                     f"Error moving resulting file from '{input_path}' to '{output_path}'"
                 )
         else:
-            log(self._logger, ["VueScan logging file not found"])
+            log(self._recorder, ["VueScan logging file not found"])
 
-    def __call__(self, logger: Logger, workflow_path: str, templates: dict[str, str]):
-        """Execute the complete VueScan workflow.
+    def __call__(self, recorder: Recorder, workflow_path: str, templates: dict[str, str]):
+        """
+        Execute the complete VueScan workflow.
 
         Args:
-            logger: Logger instance for recording workflow progress.
-            workflow_path: Path to the workflow configuration directory.
-            templates: Dictionary of initial template values.
+            recorder (Recorder): Recorder instance for recording workflow progress.
+            workflow_path (str): Path to the workflow configuration directory.
+            templates (dict[str, str]): Dictionary of initial template values.
         """
         self._templates = templates if templates else {}
         self._add_system_templates()
-        self._logger = logger
+        self._recorder = recorder
         self._workflow_path = Path(workflow_path).resolve()
-        log(self._logger, ["Starting the workflow"])
+        log(self._recorder, ["Starting the workflow"])
         self._read_settings()
         self._overwrite_vuescan_settings_file()
         self._run_vuescan()
         self._move_output_file()
         self._move_logging_file()
-        log(self._logger, ["Workflow completed successfully"])
+        log(self._recorder, ["Workflow completed successfully"])

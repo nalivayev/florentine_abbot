@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "florentine-abbot"
+version = "0.1.0"
+description = "A utility to automate and optimize scanning workflows using VueScan."
+authors = [
+    { name="Andrey Nalivayev", email="nalivayev@gmail.com" }
+]
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+dependencies = [
+    "piexif",
+]
+
+[project.scripts]
+florentine-abbot = "florentine_abbot.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+packages = ["florentine_abbot", "florentine_abbot.vuescan"]
+
+[tool.setuptools.package-data]
+"florentine_abbot.vuescan" = ["*.ini"]
+
+[tool.setuptools.exclude-package-data]
+# exclude files if needed
