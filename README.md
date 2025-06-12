@@ -75,6 +75,25 @@ python run.py --help
 
 All workflow steps and errors are logged to a file with the same name as the script and `.log` extension.
 
+## Installation
+
+To install the package locally from the source directory, use:
+
+```sh
+pip install .
+```
+
+This will install all required dependencies and make the `florentine-abbot` CLI command available in your system.
+
+> **Note:**  
+> It is recommended to use a [virtual environment](https://docs.python.org/3/library/venv.html) for installation and development.
+
+To upgrade an existing installation, use:
+
+```sh
+pip install --upgrade .
+```
+
 ---
 
 For more details, see the [README.ru.md](README.ru.md) (in Russian).
