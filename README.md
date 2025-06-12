@@ -37,22 +37,25 @@ Templates are used in settings and file names to inject dynamic values.
 - `align` — alignment (`<`, `>`, `^`; optional)  
 - `pad` — padding character (optional)  
 
-**Example:**
-
-```
-{digitization_year:8:>:0}
-```
-
 ## Supported Template Variables
 
 - `user_name` — operating system user name  
-- `digitization_year` — year of digitization (from EXIF)  
-- `digitization_month` — month of digitization (from EXIF)  
-- `digitization_day` — day of digitization (from EXIF)  
-- `digitization_hour` — hour of digitization (from EXIF)  
-- `digitization_minute` — minute of digitization (from EXIF)  
-- `digitization_second` — second of digitization (from EXIF)  
-- ...plus any additional variables provided via command-line or batch templates
+- `digitization_year` — year of digitization (from EXIF or file modification time)  
+- `digitization_month` — month of digitization  
+- `digitization_day` — day of digitization  
+- `digitization_hour` — hour of digitization  
+- `digitization_minute` — minute of digitization  
+- `digitization_second` — second of digitization  
+- `scan_dpi` — DPI value selected or calculated during the batch or interactive workflow  
+- ...plus any additional variables provided via command-line (`--templates key=value`) or batch templates
+
+**Note:**  
+If EXIF metadata is missing, date/time variables are filled with the file's modification time.
+
+**Example:**
+```
+{digitization_year:8:>:0}
+```
 
 ## Usage
 
