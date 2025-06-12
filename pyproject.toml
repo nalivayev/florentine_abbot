@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "florentine-abbot"
-version = "0.1.0"
+version = "0.1.1"
 description = "A utility to automate and optimize scanning workflows using VueScan."
 authors = [
     { name="Andrey Nalivayev", email="nalivayev@gmail.com" }

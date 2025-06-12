@@ -69,7 +69,7 @@ def create_workflow(engine: str = "vuescan"):
         ImportError: If the module is not found.
         AttributeError: If the Workflow class is missing in the module.
     """
-    module_path = f"{engine}.workflow"
+    module_path = f"florentine-abbot.{engine}.workflow"
     
     try:
         module = import_module(module_path)
