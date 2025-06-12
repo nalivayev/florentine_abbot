@@ -160,7 +160,7 @@ class Arguments:
     }
 
     rounding = {
-        "keys": ["-rd", "--rounding"],
+        "keys": ["-r", "--rounding"],
         "values": {
             "choices": ["mx", "mn", "nr"],
             "default": "nr",
