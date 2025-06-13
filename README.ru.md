@@ -16,11 +16,13 @@
 
 ## Основные модули
 
-- `run.py` — основной скрипт для запуска batch-обработки и расчетов.
-- `classes/batch.py` — логика batch-режимов и интерактивного расчета DPI.
-- `classes/recorder.py` — модуль логирования.
-- `classes/vuescan/workflow.py` — автоматизация workflow для VueScan.
-- `classes/exifer.py` — извлечение и парсинг EXIF-метаданных.
+- `florentine_abbot/cli.py` — основной CLI-модуль (используется для команды `florentine-abbot`).
+- `florentine_abbot/batch.py` — логика пакетных и интерактивных расчётов DPI.
+- `florentine_abbot/calculator.py` — алгоритмы расчёта DPI.
+- `florentine_abbot/parser.py` — парсинг и валидация аргументов командной строки.
+- `florentine_abbot/recorder.py` — модуль логирования.
+- `florentine_abbot/vuescan/workflow.py` — автоматизация рабочего процесса VueScan.
+- `florentine_abbot/exifer.py` — извлечение и обработка EXIF-метаданных.
 
 ## Система шаблонов
 

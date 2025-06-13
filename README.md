@@ -16,11 +16,13 @@ A utility designed to automate and optimize the scanning workflow using [VueScan
 
 ## Main Utilities
 
-- `run.py` — main entry point for launching batch workflows and calculations.
-- `classes/batch.py` — batch and interactive DPI calculation logic.
-- `classes/recorder.py` — logging utility.
-- `classes/vuescan/workflow.py` — workflow automation for VueScan.
-- `classes/exifer.py` — EXIF metadata extraction and parsing.
+- `florentine_abbot/cli.py` — main CLI entry point (used for the `florentine-abbot` command).
+- `florentine_abbot/batch.py` — batch and interactive DPI calculation logic.
+- `florentine_abbot/calculator.py` — DPI calculation algorithms.
+- `florentine_abbot/parser.py` — command-line argument parsing and validation.
+- `florentine_abbot/recorder.py` — logging utility.
+- `florentine_abbot/vuescan/workflow.py` — workflow automation for VueScan.
+- `florentine_abbot/exifer.py` — EXIF metadata extraction and parsing.
 
 ## Template System
 
