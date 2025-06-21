@@ -1,7 +1,3 @@
-[build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
-
 [project]
 name = "florentine-abbot"
 version = "0.1.1"
@@ -11,20 +7,22 @@ authors = [
 ]
 readme = "README.md"
 requires-python = ">=3.8"
-license = { text = "MIT" }
-dependencies = [
-    "piexif",
-]
+license = { file = "LICENSE.md" }
+dependencies = ["piexif"]
 
 [project.scripts]
 florentine-abbot = "florentine_abbot.cli:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
-packages = ["florentine_abbot", "florentine_abbot.vuescan"]
+packages = [
+    "florentine_abbot", 
+    "florentine_abbot.vuescan"
+]
 
 [tool.setuptools.package-data]
 "florentine_abbot.vuescan" = ["*.ini"]
 
-[tool.setuptools.exclude-package-data]
-# exclude files if needed
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
