@@ -17,7 +17,7 @@ A utility designed to automate and optimize the scanning workflow using [VueScan
 
 ## Main Utilities
 
-- `scan_batcher/cli.py` — main CLI entry point (used for the `florentine-abbot` command).
+- `scan_batcher/cli.py` — main CLI entry point (used for the `scan-batcher` command).
 - `scan_batcher/batch.py` — batch and interactive DPI calculation logic.
 - `scan_batcher/calculator.py` — DPI calculation algorithms.
 - `scan_batcher/parser.py` — command-line argument parsing and validation.
@@ -67,13 +67,13 @@ If EXIF metadata is missing, date/time variables are filled with the file's modi
 Run the main workflow:
 
 ```sh
-florentine-abbot --workflow <path_to_ini> --engine vuescan --batch scan --min-dpi 300 --max-dpi 4800 --dpis 600 1200 2400 4800
+scan-batcher --workflow <path_to_ini> --engine vuescan --batch scan --min-dpi 300 --max-dpi 4800 --dpis 600 1200 2400 4800
 ```
 
 For a full list of arguments and options, use:
 
 ```sh
-florentine-abbot --help
+scan-batcher --help
 ```
 
 ## Logging
@@ -88,7 +88,7 @@ To install the package locally from the source directory, use:
 pip install .
 ```
 
-This will install all required dependencies and make the `florentine-abbot` CLI command available in your system.
+This will install all required dependencies and make the `scan-batcher` CLI command available in your system.
 
 > **Note:**  
 > It is recommended to use a [virtual environment](https://docs.python.org/3/library/venv.html) for installation and development.

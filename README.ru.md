@@ -17,7 +17,7 @@
 
 ## Основные модули
 
-- `scan_batcher/cli.py` — основной CLI-модуль (используется для команды `florentine-abbot`).
+- `scan_batcher/cli.py` — основной CLI-модуль (используется для команды `scan-batcher`).
 - `scan_batcher/batch.py` — логика пакетных и интерактивных расчётов DPI.
 - `scan_batcher/calculator.py` — алгоритмы расчёта DPI.
 - `scan_batcher/parser.py` — парсинг и валидация аргументов командной строки.
@@ -67,13 +67,13 @@
 Запуск основного рабочего процесса:
 
 ```sh
-florentine-abbot --workflow <путь_к_ini> --engine vuescan --batch scan --min-dpi 300 --max-dpi 4800 --dpis 600 1200 2400 4800
+scan-batcher --workflow <путь_к_ini> --engine vuescan --batch scan --min-dpi 300 --max-dpi 4800 --dpis 600 1200 2400 4800
 ```
 
 Для получения полного списка аргументов и опций используйте:
 
 ```sh
-florentine-abbot --help
+scan-batcher --help
 ```
 
 ## Логирование
@@ -88,7 +88,7 @@ florentine-abbot --help
 pip install .
 ```
 
-Это установит все необходимые зависимости и сделает команду `florentine-abbot` доступной в вашей системе.
+Это установит все необходимые зависимости и сделает команду `scan-batcher` доступной в вашей системе.
 
 > **Примечание:**  
 > Рекомендуется использовать [виртуальное окружение](https://docs.python.org/3/library/venv.html) для установки и разработки.
