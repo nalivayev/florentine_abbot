@@ -1,11 +1,11 @@
 from sys import stderr, exit
 from typing import List
 from pathlib import Path
-from importlib import import_module
 
-from florentine_abbot.recorder import log, Recorder
-from florentine_abbot.batch import Batch, Scan
-from florentine_abbot.parser import Parser
+from scan_batcher.recorder import log, Recorder
+from scan_batcher.batch import Batch, Scan
+from scan_batcher.parser import Parser
+from scan_batcher.workflows import get_workflow
 
 
 def get_subclasses(cls):
@@ -57,7 +57,7 @@ def create_batch(recorder: Recorder, batch: List, min_res: int, max_res: int, re
 
 def create_workflow(engine: str = "vuescan"):
     """
-    Create and return a Workflow object from the module <engine>.workflow.
+    Get a registered workflow class by engine name and return its instance.
 
     Args:
         engine (str): The type of engine to create (e.g., "vuescan", "silverfast").
@@ -66,18 +66,10 @@ def create_workflow(engine: str = "vuescan"):
         Workflow: An instance of the Workflow class.
 
     Raises:
-        ImportError: If the module is not found.
-        AttributeError: If the Workflow class is missing in the module.
+        ValueError: If the workflow is not registered.
     """
-    module_path = f"{__package__}.{engine}.workflow"
-    try:
-        module = import_module(module_path)
-        workflow_class = getattr(module, "Workflow")
-        return workflow_class()
-    except ImportError as e:
-        raise ImportError(f"Module {module_path} not found. Check the path or engine name.") from e
-    except AttributeError as e:
-        raise AttributeError(f"Class 'Workflow' not found in module {module_path}.") from e
+    workflow_class = get_workflow(engine)
+    return workflow_class()
 
 def main():
     """

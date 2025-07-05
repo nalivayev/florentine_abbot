@@ -2,8 +2,8 @@ import os
 from abc import ABC, abstractmethod
 from typing import List, Tuple
 
-from florentine_abbot.recorder import log, Recorder
-from florentine_abbot.calculator import Calculator
+from scan_batcher.recorder import log, Recorder
+from scan_batcher.calculator import Calculator
 
 
 class Batch(ABC):

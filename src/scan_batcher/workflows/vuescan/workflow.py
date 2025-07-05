@@ -8,11 +8,14 @@ from re import finditer
 from os import makedirs
 import datetime
 
-from florentine_abbot.recorder import log, Recorder
-from florentine_abbot.exifer import Exifer
+from scan_batcher.recorder import log, Recorder
+from scan_batcher.exifer import Exifer
+from scan_batcher.workflows import register_workflow
+from scan_batcher.workflow import Workflow
 
 
-class Workflow:
+@register_workflow("vuescan")
+class VuescanWorkflow(Workflow):
     """
     Workflow manager for VueScan scanning operations.
 
@@ -30,10 +33,6 @@ class Workflow:
         "digitization_minute",
         "digitization_second"
     ]
-
-    class Exception(Exception):
-        """Custom exception for VueScan workflow errors."""
-        pass
 
     def _read_settings_file(self, path: Path) -> ConfigParser:
         """
@@ -55,7 +54,7 @@ class Workflow:
             log(self._recorder, ["Settings loaded"])
             return parser
         else:
-            raise Workflow.Exception(f"Error loading settings from file '{path}'")
+            raise VuescanWorkflow.Exception(f"Error loading settings from file '{path}'")
 
     def _add_system_templates(self):
         """
@@ -121,7 +120,7 @@ class Workflow:
             with open(path, "w") as file:
                 parser.write(file)
         except (SameFileError, OSError):
-            raise Workflow.Exception("Error overwriting the VueScan settings file")
+            raise VuescanWorkflow.Exception("Error overwriting the VueScan settings file")
         log(self._recorder, [f"VueScan settings file '{path}' overwritten"])
 
     def _run_vuescan(self):
@@ -145,7 +144,7 @@ class Workflow:
             )
             log(self._recorder, ["VueScan is closed"])
         else:
-            raise Workflow.Exception(f"File '{program_path}' not found")
+            raise VuescanWorkflow.Exception(f"File '{program_path}' not found")
 
     def _convert_value(self, value: str) -> str:
         """
@@ -166,7 +165,7 @@ class Workflow:
             try:
                 value = self._templates[key]
             except KeyError:
-                raise Workflow.Exception(f"Key '{key}' not found")
+                raise VuescanWorkflow.Exception(f"Key '{key}' not found")
             try:
                 length = int(fields[1]) if len(fields) > 1 else 0
                 alignment = fields[2] if len(fields) > 2 and fields[2] in ("<", ">", "^") else "<"
@@ -175,9 +174,9 @@ class Workflow:
                 result = result.format(str(value))
                 return result
             except ValueError:
-                raise Workflow.Exception("Template conversion error")
+                raise VuescanWorkflow.Exception("Template conversion error")
         else:
-            raise Workflow.Exception("An empty template was found")
+            raise VuescanWorkflow.Exception("An empty template was found")
 
     def _replace_templates_to_value(self, string: str) -> str:
         """
@@ -194,7 +193,7 @@ class Workflow:
             template = string[match.start():match.end()]
             try:
                 value = self._convert_value(template[1:-1])
-            except Workflow.Exception:
+            except VuescanWorkflow.Exception:
                 log(self._recorder, [f"Error converting template '{string[1:-1]}' to value"])
                 continue
             result = result.replace(template, value)
@@ -217,7 +216,7 @@ class Workflow:
                 except Exifer.Exception:
                     return
         else:
-            moment = datetime.fromtimestamp(getmtime(path))
+            moment = datetime.datetime.fromtimestamp(getmtime(path))
         if moment:
             for key in self._EXIF_TEMPLATE_NAMES:
                 self._templates[key] = getattr(moment, key.replace("digitization_", ""), "")
@@ -266,11 +265,11 @@ class Workflow:
                     f"The name of the final file is '{output_path.name}'"
                 ])
             except OSError:
-                raise Workflow.Exception(
+                raise VuescanWorkflow.Exception(
                     f"Error moving resulting file from '{input_path}' to '{output_path}'"
                 )
         else:
-            raise Workflow.Exception(f"Output file '{input_path}' not found")
+            raise VuescanWorkflow.Exception(f"Output file '{input_path}' not found")
 
     def _move_logging_file(self):
         """
@@ -291,7 +290,7 @@ class Workflow:
                     f"The name of the final file is '{output_path.name}'"
                 ])
             except OSError:
-                raise Workflow.Exception(
+                raise VuescanWorkflow.Exception(
                     f"Error moving resulting file from '{input_path}' to '{output_path}'"
                 )
         else:

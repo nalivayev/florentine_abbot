@@ -13,16 +13,19 @@ A utility designed to automate and optimize the scanning workflow using [VueScan
 - **Workflow automation**: run VueScan with generated settings, move and rename output files, extract EXIF metadata.
 - **Comprehensive logging** for all workflow steps.
 - **Command-line interface** with argument validation and help.
+- **Plugin system**: easily extend workflows by adding new plugins (see below).
 
 ## Main Utilities
 
-- `florentine_abbot/cli.py` — main CLI entry point (used for the `florentine-abbot` command).
-- `florentine_abbot/batch.py` — batch and interactive DPI calculation logic.
-- `florentine_abbot/calculator.py` — DPI calculation algorithms.
-- `florentine_abbot/parser.py` — command-line argument parsing and validation.
-- `florentine_abbot/recorder.py` — logging utility.
-- `florentine_abbot/vuescan/workflow.py` — workflow automation for VueScan.
-- `florentine_abbot/exifer.py` — EXIF metadata extraction and parsing.
+- `scan_batcher/cli.py` — main CLI entry point (used for the `florentine-abbot` command).
+- `scan_batcher/batch.py` — batch and interactive DPI calculation logic.
+- `scan_batcher/calculator.py` — DPI calculation algorithms.
+- `scan_batcher/parser.py` — command-line argument parsing and validation.
+- `scan_batcher/recorder.py` — logging utility.
+- `scan_batcher/workflow.py` — base class for all workflow plugins.
+- `scan_batcher/workflows/__init__.py` — plugin registration and discovery.
+- `scan_batcher/workflows/vuescan/workflow.py` — workflow automation for VueScan.
+- `scan_batcher/exifer.py` — EXIF metadata extraction and parsing.
 
 ## Template System
 
@@ -64,13 +67,13 @@ If EXIF metadata is missing, date/time variables are filled with the file's modi
 Run the main workflow:
 
 ```sh
-python run.py --workflow <path_to_ini> --engine vuescan --batch scan --min-dpi 300 --max-dpi 4800 --dpis 600 1200 2400 4800
+florentine-abbot --workflow <path_to_ini> --engine vuescan --batch scan --min-dpi 300 --max-dpi 4800 --dpis 600 1200 2400 4800
 ```
 
-For full list of arguments and options, use:
+For a full list of arguments and options, use:
 
 ```sh
-python run.py --help
+florentine-abbot --help
 ```
 
 ## Logging

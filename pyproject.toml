@@ -11,17 +11,18 @@ license = { file = "LICENSE.md" }
 dependencies = ["piexif"]
 
 [project.scripts]
-florentine-abbot = "florentine_abbot.cli:main"
+scan-batcher = "scan_batcher.cli:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
 packages = [
-    "florentine_abbot", 
-    "florentine_abbot.vuescan"
+    "scan_batcher",
+    "scan_batcher.workflows",
+    "scan_batcher.workflows.vuescan"
 ]
 
 [tool.setuptools.package-data]
-"florentine_abbot.vuescan" = ["*.ini"]
+"scan_batcher.workflows.vuescan" = ["*.ini"]
 
 [build-system]
 requires = ["setuptools>=61.0"]
