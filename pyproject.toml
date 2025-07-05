@@ -8,7 +8,7 @@ authors = [
 keywords = ["vuescan", "scanning", "automation"]
 readme = "README.md"
 requires-python = ">=3.8"
-license = { file = "LICENSE" }
+license = "MIT"
 dependencies = ["piexif"]
 
 [project.scripts]
