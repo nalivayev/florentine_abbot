@@ -5,6 +5,7 @@ description = "A utility to automate and optimize scanning workflows using VueSc
 authors = [
     { name="Andrey Nalivayev", email="nalivayev@gmail.com" }
 ]
+keywords = ["vuescan", "scanning", "automation"]
 readme = "README.md"
 requires-python = ">=3.8"
 license = { file = "LICENSE" }
