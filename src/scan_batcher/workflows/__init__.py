@@ -51,7 +51,7 @@ def load_workflows():
     """
     # Import all built-in workflow modules
     package_dir = Path(__file__).parent
-    for finder, subpkg, ispkg in pkgutil.iter_modules([str(package_dir)]):
+    for _, subpkg, _ in pkgutil.iter_modules([str(package_dir)]):
         subpkg_path = package_dir / subpkg
         if (subpkg_path / "workflow.py").exists():
             importlib.import_module(f".{subpkg}.workflow", package=__name__)

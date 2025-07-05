@@ -1,5 +1,5 @@
 [project]
-name = "florentine-abbot"
+name = "scan-batcher"
 version = "0.1.1"
 description = "A utility to automate and optimize scanning workflows using VueScan."
 authors = [
