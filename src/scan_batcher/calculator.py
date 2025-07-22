@@ -15,7 +15,7 @@ class Calculator:
         (508.0, 300, [(150, 1772), (300, 3543), (600, 7087)])
     """
 
-    CM_TO_INCH: float = 2.54  # Conversion factor from centimeters to inches
+    _CM_TO_INCH: float = 2.54  # Conversion factor from centimeters to inches
 
     def __call__(
         self,
@@ -63,7 +63,7 @@ class Calculator:
         dpi_list = sorted(dpi_list) if dpi_list else []
 
         # Calculate base DPI
-        calculated_dpi = image_min_side / (photo_min_side / self.CM_TO_INCH)
+        calculated_dpi = image_min_side / (photo_min_side / self._CM_TO_INCH)
         recommended_dpi = calculated_dpi
 
         dpi_options: List[Tuple[int, int]] = []
@@ -93,7 +93,7 @@ class Calculator:
 
             # Prepare DPI options
             dpi_options = [
-                (dpi, int(dpi * photo_min_side / self.CM_TO_INCH))
+                (dpi, int(dpi * photo_min_side / self._CM_TO_INCH))
                 for dpi in dpi_list
             ]
 

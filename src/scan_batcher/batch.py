@@ -1,6 +1,6 @@
 import os
 from abc import ABC, abstractmethod
-from typing import List, Tuple
+from typing import Tuple
 
 from scan_batcher.recorder import log, Recorder
 from scan_batcher.calculator import Calculator
@@ -11,15 +11,14 @@ class Batch(ABC):
     Abstract base class for all data sources used in batch processing.
     """
 
-    @abstractmethod
-    def _next(self):
+    def __next__(self) -> dict | None:
         """
-        Perform a single calculation or data retrieval step.
+        Infinitely yield batch parameters.
 
         Returns:
-            Any: The result of the calculation or data retrieval.
+            dict: Batch parameters.
         """
-        pass
+        return None
 
     @abstractmethod
     def __iter__(self):
@@ -29,7 +28,7 @@ class Batch(ABC):
         Returns:
             Batch: The iterator object itself.
         """
-        pass
+        return self
 
 
 class Calculate(Batch):
@@ -39,10 +38,10 @@ class Calculate(Batch):
 
     def __init__(
         self,
-        recorder: Recorder = None,
-        min_dpi: int = None,
-        max_dpi: int = None,
-        dpis: List[int] = None,
+        recorder: Recorder | None = None,
+        min_dpi: int | None = None,
+        max_dpi: int | None = None,
+        dpis: list[int] | None = None,
         rounding: str = "nr"
     ):
         """
@@ -96,7 +95,7 @@ class Calculate(Batch):
                 print("Error: Enter a number")
                 log(self.recorder, ["Invalid float input"])
 
-    def _get_int_input(self, prompt: str, default: int = None) -> int:
+    def _get_int_input(self, prompt: str, default: int | None = None) -> int:
         """
         Get an integer input from the user with error handling.
 
@@ -132,7 +131,7 @@ class Calculate(Batch):
         """
         print(f"{num:>3}\t{dpi:>10}\t{px:>10}\t{note:<20}")
 
-    def _print_table(self, dpis: List[Tuple[int, int]], rec_dpi: float = None, calc_dpi: float = None) -> None:
+    def _print_table(self, dpis: list[Tuple[int, int]], rec_dpi: float | None = None, calc_dpi: float | None = None) -> None:
         """
         Print a table of DPI calculation results.
 
@@ -181,9 +180,9 @@ class Calculate(Batch):
 
         # Add calculated values if not present
         if calc_dpi is not None:
-            dpis.add((calc_dpi, int(photo_min_side * calc_dpi / 2.54)))
+            dpis.add((int(calc_dpi), int(photo_min_side * calc_dpi / 2.54)))
         if rec_dpi is not None:
-            dpis.add((rec_dpi, int(photo_min_side * rec_dpi / 2.54)))
+            dpis.add((int(rec_dpi), int(photo_min_side * rec_dpi / 2.54)))
 
         # Sort for display, but work with set
         dpis = sorted(dpis, key=lambda x: x[0])
@@ -230,7 +229,7 @@ class Calculate(Batch):
         """
         return self
 
-    def __next__(self):
+    def __next__(self) -> dict | None:
         """
         Perform a single calculation and raise StopIteration.
 
@@ -246,15 +245,14 @@ class Scan(Calculate):
     Data source from scanner (infinite) with built-in DPI calculation.
     """
 
-    def __next__(self):
+    def __next__(self) -> dict | None:
         """
         Infinitely yield scan parameters with calculated DPI.
 
         Returns:
             dict: Scan parameters with calculated DPI.
         """
-        result = self._next()
-        return result
+        return self._next()
 
 
 class Process(Batch):

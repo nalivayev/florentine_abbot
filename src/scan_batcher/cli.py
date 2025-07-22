@@ -90,7 +90,10 @@ def main():
             batch_dict = dict(item) if isinstance(item, list) else item
             templates_dict = dict(args.templates) if args.templates else {}
 
-            merged_templates = {**templates_dict, **batch_dict}
+            if batch_dict:
+                merged_templates = {**templates_dict, **batch_dict}
+            else:
+                merged_templates = {**templates_dict}
             workflow(recorder, args.workflow, merged_templates)
 
         except KeyboardInterrupt:

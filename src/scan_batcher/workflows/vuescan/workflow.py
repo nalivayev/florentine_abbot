@@ -199,28 +199,6 @@ class VuescanWorkflow(Workflow):
             result = result.replace(template, value)
         return result
 
-    def _add_output_file_templates(self, path: Path) -> dict[str, str]:
-        """
-        Extract EXIF data from scanned file and add datetime templates.
-
-        Args:
-            path (Path): Path to the scanned file.
-        """
-        moment = None
-        if path.suffix.lower() in [".tiff", ".tif", ".jpeg", ".jpg"]:
-            tags = self._extract_exif_tags(path)
-            value = tags.get(Exifer.EXIFIFD, {}).get("DateTimeDigitized", "")
-            if value:
-                try:
-                    moment = Exifer.convert_value_to_datetime(value.decode())
-                except Exifer.Exception:
-                    return
-        else:
-            moment = datetime.datetime.fromtimestamp(getmtime(path))
-        if moment:
-            for key in self._EXIF_TEMPLATE_NAMES:
-                self._templates[key] = getattr(moment, key.replace("digitization_", ""), "")
-
     def _extract_exif_tags(self, path: Path) -> dict[str, str]:
         """
         Extract EXIF metadata from an image file.
@@ -237,6 +215,28 @@ class VuescanWorkflow(Workflow):
             log(self._recorder, [str(e)])
             log(self._recorder, [f"Unable to extract EXIF from file '{path.name}'"])
             return {}
+
+    def _add_output_file_templates(self, path: Path) -> None:
+        """
+        Extract EXIF data from scanned file and add datetime templates.
+
+        Args:
+            path (Path): Path to the scanned file.
+        """
+        moment = None
+        if path.suffix.lower() in [".tiff", ".tif", ".jpeg", ".jpg"]:
+            tags: dict = self._extract_exif_tags(path)
+            value = tags.get(Exifer.EXIFIFD, {}).get("DateTimeDigitized", "")
+            if value:
+                try:
+                    moment = Exifer.convert_value_to_datetime(value.decode())
+                except Exifer.Exception:
+                    return
+        else:
+            moment = datetime.datetime.fromtimestamp(getmtime(path))
+        if moment:
+            for key in self._EXIF_TEMPLATE_NAMES:
+                self._templates[key] = getattr(moment, key.replace("digitization_", ""), "")
 
     def _move_output_file(self):
         """

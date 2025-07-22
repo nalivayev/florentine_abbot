@@ -1,7 +1,6 @@
 from piexif import load, TAGS, InvalidImageDataError
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import List
 
 
 class Exifer:
@@ -21,7 +20,7 @@ class Exifer:
         pass
 
     @staticmethod
-    def _exif_geo_values_to_value(values: List) -> float:
+    def _exif_geo_values_to_value(values: list| None) -> float:
         """
         Convert a list of EXIF GPS coordinate values (degrees, minutes, seconds) to a float.
 
@@ -35,7 +34,7 @@ class Exifer:
             Exifer.Exception: If input is empty or contains invalid values.
         """
         result = 0
-        if len(values) > 0:
+        if values and len(values) > 0:
             try:
                 result = float(values[0])
             except (ValueError, OverflowError):
@@ -55,7 +54,7 @@ class Exifer:
             raise Exifer.Exception("Empty input value")
 
     @staticmethod
-    def _exif_values_to_latitude(values: List = None, reference: str = None) -> float:
+    def _exif_values_to_latitude(values: list | None = None, reference: str | None = None) -> float:
         """
         Convert EXIF GPS latitude values and reference to a signed float.
 
@@ -72,7 +71,7 @@ class Exifer:
         return result
 
     @staticmethod
-    def _exif_values_to_longitude(values: List = None, reference: str = None) -> float:
+    def _exif_values_to_longitude(values: list | None = None, reference: str | None = None) -> float:
         """
         Convert EXIF GPS longitude values and reference to a signed float.
 
@@ -89,7 +88,7 @@ class Exifer:
         return result
 
     @staticmethod
-    def _exif_value_to_altitude(value: str = None) -> float:
+    def _exif_value_to_altitude(value: str | None = None) -> float:
         """
         Convert EXIF altitude value to float.
 
@@ -100,16 +99,18 @@ class Exifer:
             float: Altitude.
 
         Raises:
-            Exifer.Exception: If the value cannot be converted.
+            Exifer.Exception: If the value cannot be converted or is None.
         """
+        if not value:
+            raise Exifer.Exception(f"Invalid input value: {value}")
+        
         try:
-            result = float(value)
+            return float(value)
         except (ValueError, OverflowError):
             raise Exifer.Exception(f"Invalid input value: {value}")
-        return result
-
+        
     @staticmethod
-    def gps_values_to_date_time(date_value: str, time_values: List) -> datetime:
+    def gps_values_to_date_time(date_value: str, time_values: list) -> datetime:
         """
         Convert EXIF GPS date and time values to a datetime object.
 

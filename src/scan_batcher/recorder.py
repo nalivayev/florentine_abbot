@@ -1,5 +1,4 @@
 from logging import Logger, getLogger, FileHandler, Formatter, INFO
-from typing import List
 
 
 class Recorder:
@@ -33,7 +32,7 @@ class Recorder:
         self._logger.info(message)
 
 
-def log(recorder: Recorder, messages: List[str]) -> None:
+def log(recorder: Recorder | None, messages: list[str]) -> None:
     """
     Log multiple messages using the provided recorder.
 
