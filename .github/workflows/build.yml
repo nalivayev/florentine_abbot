@@ -27,5 +27,5 @@ jobs:
       - name: Upload wheel as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: scan-batcher-wheel
+          name: scan-batcher
           path: dist/*.whl
