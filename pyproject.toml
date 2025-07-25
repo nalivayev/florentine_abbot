@@ -23,7 +23,7 @@ packages = [
 ]
 
 [tool.setuptools.package-data]
-scan_batcher.workflows.vuescan = ["*.ini"]
+"scan_batcher.workflows.vuescan" = ["*.ini"]
 
 [build-system]
 requires = ["setuptools>=61.0"]
