@@ -1,6 +1,6 @@
 [project]
 name = "scan-batcher"
-version = "0.1.1"
+version = "1.0.0"
 description = "A utility to automate and optimize scanning workflows using VueScan."
 authors = [
     { name="Andrey Nalivayev", email="nalivayev@gmail.com" }
